@@ -30,7 +30,7 @@
     "docxtemplater": "^3.66.7",
     "keyv": "^5.5.1",
     "langchain": "^0.3.34",
-    "mammoth": ">=1.11.0"
+    "mammoth": ">=1.11.0",
     "marked": "^16.3.0",
     "node-edge-tts": "^1.2.8",
     "pdf-lib": "^1.17.1",
