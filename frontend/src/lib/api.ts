@@ -12,6 +12,9 @@ export type Question = { id: number; question: string; options: string[]; correc
 export type QuizStartResponse = { ok: true; quizId: string; stream: string }
 export type QuizEvent = { type: "ready" | "phase" | "quiz" | "done" | "error" | "ping"; quizId?: string; value?: string; quiz?: unknown; error?: string; t?: number }
 export type SmartNotesStart = { ok: true; noteId: string; stream: string }
+export type CompanionHistoryEntry = { role: "user" | "assistant"; content: string }
+export type CompanionAnswer = { topic: string; answer: string; flashcards: FlashCard[] }
+export type CompanionAskResponse = { ok: boolean; companion: CompanionAnswer }
 export type SavedFlashcard = {
   id: string;
   question: string;
@@ -177,6 +180,34 @@ export async function chatAskOnce(opts: {
   });
 
   return { chatId: start.chatId, answer, flashcards };
+}
+
+export async function companionAsk(input: {
+  question: string;
+  filePath?: string;
+  documentText?: string;
+  documentTitle?: string;
+  topic?: string;
+  history?: CompanionHistoryEntry[];
+}) {
+  const question = (input.question || "").trim();
+  if (!question) throw new Error("Question is required");
+
+  const payload: Record<string, unknown> = { question };
+  if (input.filePath) payload.filePath = input.filePath;
+  if (input.documentText) payload.documentText = input.documentText;
+  if (input.documentTitle) payload.documentTitle = input.documentTitle;
+  if (input.topic) payload.topic = input.topic;
+  if (input.history && input.history.length) {
+    payload.history = input.history.map((h) => ({ role: h.role, content: h.content }));
+  }
+
+  return req<CompanionAskResponse>(`${env.backend}/api/companion/ask`, {
+    method: "POST",
+    headers: jsonHeaders({}),
+    body: JSON.stringify(payload),
+    timeout: Math.max(env.timeout, 120000),
+  });
 }
 
 export function getChats() {

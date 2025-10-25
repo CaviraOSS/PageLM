@@ -10,6 +10,7 @@ import Composer from "../components/Chat/Composer";
 import BagFab from "../components/Chat/BagFab";
 import BagDrawer from "../components/Chat/BagDrawer";
 import LoadingIndicator from "../components/Chat/LoadingIndicator";
+import { useCompanion } from "../components/Companion/CompanionProvider";
 
 type BagItem = { id: string; kind: "flashcard" | "note"; title: string; content: string };
 
@@ -71,6 +72,7 @@ export default function Chat() {
   const [connecting, setConnecting] = useState<boolean>(!!(initialChatId || initialQuestion));
   const [awaitingAnswer, setAwaitingAnswer] = useState<boolean>(false);
   const [topic, setTopic] = useState<string>("");
+  const { setDocument } = useCompanion();
 
   const selPopupRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -269,6 +271,24 @@ export default function Chat() {
     }
     return "";
   }, [messages]);
+
+  useEffect(() => {
+    if (latestAssistantContent) {
+      const docTitle = topic || deriveTopicFromMarkdown(latestAssistantContent) || "Study Topic";
+      const docId = chatId ? `chat:${chatId}` : "chat:current";
+      setDocument({
+        id: docId,
+        title: docTitle,
+        text: latestAssistantContent,
+      });
+    } else {
+      setDocument(null);
+    }
+  }, [chatId, latestAssistantContent, setDocument, topic]);
+
+  useEffect(() => {
+    return () => setDocument(null);
+  }, [setDocument]);
 
   const list = Array.isArray(messages) ? messages : [];
 

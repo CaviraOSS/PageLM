@@ -53,6 +53,7 @@ The platform provides a modern interface for students, educators, and researcher
 - **Homework Planner** - Plans your Homework Smartly using AI, Assists if your stuck.
 - **ExamLab** - Simulate any exam, get feedback, and be prepared for the exam
 - **Debate** - Debate with AI to improve your Debate skills.
+- **Study Companion** - A personalised AI Companion that assists you.
 
 ### Supported AI Models
 

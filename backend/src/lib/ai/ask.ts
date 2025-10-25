@@ -38,7 +38,7 @@ function tryParse<T = unknown>(s: string): T | null {
   try { return JSON.parse(s) as T } catch { return null }
 }
 
-const SYSTEM_PROMPT = `
+export const BASE_SYSTEM_PROMPT = `
 IDENTITY & MISSION
 You are PageLM, an advanced AI educational system designed to excel in every dimension. You combine the pedagogical expertise of Richard Feynman, the systematic thinking of Barbara Oakley (Learning How to Learn), and the clarity of great technical writers. Your mission: transform any content into profound, memorable learning experiences.
 
@@ -237,57 +237,69 @@ const keyOf = (x: any) => crypto.createHash("sha256").update(typeof x === "strin
 const readCache = (k: any) => { const f = path.join(cacheDir, keyOf(k) + ".json"); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : null }
 const writeCache = (k: any, v: any) => { const f = path.join(cacheDir, keyOf(k) + ".json"); fs.writeFileSync(f, JSON.stringify(v)) }
 
-export async function handleAsk(q: string | { q: string; namespace?: string; history?: any[] }, ns?: string, k = 6, history?: any[]): Promise<AskPayload> {
-  if (typeof q === 'object' && q !== null) {
-    const params = q;
-    return handleAsk(params.q, params.namespace, k, params.history);
+type HistoryMessage = { role: string; content: any }
+
+function toMessageContent(content: any): string {
+  if (content == null) return ""
+  if (typeof content === "string") return content
+  if (typeof content === "object") {
+    const cand = (content as any).answer ?? (content as any).content
+    if (typeof cand === "string" && cand.trim()) return cand
+    try { return JSON.stringify(content) } catch { return String(content) }
   }
+  return String(content)
+}
 
-  const safeQ = normalizeTopic(q as string)
-  const nsFinal = typeof ns === "string" && ns.trim() ? ns : "pagelm"
+function serializeHistoryForCache(history?: HistoryMessage[]): string[] {
+  if (!history || !history.length) return []
+  return history
+    .slice(-4)
+    .filter((m) => m?.role === "user" || m?.role === "assistant")
+    .map((m) => `${m.role}:${toMessageContent(m.content).slice(0, 120)}`)
+}
 
-  const rag = await execDirect({
-    agent: "researcher",
-    plan: { steps: [{ tool: "rag.search", input: { q: safeQ, ns: nsFinal, k }, timeoutMs: 8000, retries: 1 }] },
-    ctx: { ns: nsFinal }
-  })
+function toConversationHistory(history?: HistoryMessage[]): Array<{ role: string; content: string }> {
+  if (!history || !history.length) return []
+  const recent = history.slice(-6)
+  const out: Array<{ role: string; content: string }> = []
+  for (const msg of recent) {
+    if (!msg || (msg.role !== "user" && msg.role !== "assistant")) continue
+    out.push({ role: msg.role, content: toMessageContent(msg.content) })
+  }
+  return out
+}
 
-  const ctxDocs = Array.isArray(rag) ? (rag as Array<{ text?: string }>) : []
-  const ctx = ctxDocs.map(d => d?.text || "").join("\n\n") || "NO_CONTEXT"
-  const topic = guessTopic(safeQ) || "General"
+type AskWithContextOptions = {
+  question: string
+  context: string
+  topic?: string
+  systemPrompt?: string
+  history?: HistoryMessage[]
+  cacheScope?: string
+}
 
-  const historyContext = history && history.length > 1 ?
-    history.slice(-4).map(m => `${m.role}:${typeof m.content === 'string' ? m.content.slice(0, 100) : ''}`) :
-    [];
+export async function askWithContext(opts: AskWithContextOptions): Promise<AskPayload> {
+  const rawQuestion = typeof opts.question === "string" ? opts.question : String(opts.question ?? "")
+  const safeQ = normalizeTopic(rawQuestion)
+  const ctx = typeof opts.context === "string" && opts.context.trim() ? opts.context : "NO_CONTEXT"
+  const topic = typeof opts.topic === "string" && opts.topic.trim()
+    ? opts.topic.trim()
+    : guessTopic(safeQ) || "General"
+  const systemPrompt = opts.systemPrompt?.trim() || BASE_SYSTEM_PROMPT
+  const historyArr = Array.isArray(opts.history) ? opts.history : undefined
+  const historyCache = serializeHistoryForCache(historyArr)
 
-  const ck = { t: "ans", q: safeQ, ctx, topic, hist: historyContext }
+  const ck = { t: opts.cacheScope || "ask_ctx", q: safeQ, ctx, topic, sys: systemPrompt, hist: historyCache }
   const cached = readCache(ck)
   if (cached) return cached
 
-  const conversationMessages: any[] = [
-    { role: "system", content: SYSTEM_PROMPT }
-  ];
+  const messages: any[] = [{ role: "system", content: systemPrompt }]
+  for (const msg of toConversationHistory(historyArr)) messages.push(msg)
 
-  if (history && Array.isArray(history) && history.length > 1) {
-    const recentHistory = history.slice(-6);
-    for (const msg of recentHistory) {
-      if (msg.role === "user" || msg.role === "assistant") {
-        const content = typeof msg.content === "string" ? msg.content :
-          (msg.content?.answer || JSON.stringify(msg.content));
-        conversationMessages.push({
-          role: msg.role,
-          content: content
-        });
-      }
-    }
-  }
-
-  conversationMessages.push({
+  messages.push({
     role: "user",
     content: `Context:\n${ctx}\n\nQuestion:\n${safeQ}\n\nTopic:\n${topic}\n\nReturn only the JSON object.`
-  });
-
-  const messages = conversationMessages
+  })
 
   const res = await llm.call(messages as any)
   const draft = toText(res).trim()
@@ -305,4 +317,39 @@ export async function handleAsk(q: string | { q: string; namespace?: string; his
 
   writeCache(ck, out)
   return out
+}
+
+export async function handleAsk(
+  q: string | { q: string; namespace?: string; history?: any[] },
+  ns?: string,
+  k = 6,
+  historyArg?: any[]
+): Promise<AskPayload> {
+  if (typeof q === "object" && q !== null) {
+    const params = q
+    return handleAsk(params.q, params.namespace ?? ns, k, params.history ?? historyArg)
+  }
+
+  const questionRaw = typeof q === "string" ? q : String(q ?? "")
+  const safeQ = normalizeTopic(questionRaw)
+  const nsFinal = typeof ns === "string" && ns.trim() ? ns : "pagelm"
+
+  const rag = await execDirect({
+    agent: "researcher",
+    plan: { steps: [{ tool: "rag.search", input: { q: safeQ, ns: nsFinal, k }, timeoutMs: 8000, retries: 1 }] },
+    ctx: { ns: nsFinal }
+  })
+
+  const ctxDocs = Array.isArray(rag) ? (rag as Array<{ text?: string }>) : []
+  const ctx = ctxDocs.map(d => d?.text || "").join("\n\n") || "NO_CONTEXT"
+  const topic = guessTopic(safeQ) || "General"
+
+  return askWithContext({
+    question: questionRaw,
+    context: ctx,
+    topic,
+    history: historyArg,
+    systemPrompt: BASE_SYSTEM_PROMPT,
+    cacheScope: `ans:${nsFinal}`
+  })
 }

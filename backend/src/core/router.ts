@@ -7,6 +7,7 @@ import { examRoutes } from "./routes/examlab";
 import { transcriberRoutes } from "./routes/transcriber";
 import { plannerRoutes } from "./routes/planner";
 import { debateRoutes } from "./routes/debate";
+import { companionRoutes } from "./routes/companion";
 
 export function registerRoutes(app: any) {
   chatRoutes(app);
@@ -18,4 +19,5 @@ export function registerRoutes(app: any) {
   transcriberRoutes(app);
   plannerRoutes(app);
   debateRoutes(app);
+  companionRoutes(app);
 }
