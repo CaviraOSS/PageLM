@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@google-cloud/speech": "^7.2.0",
-    "@google-cloud/text-to-speech": "^6.3.0",
+    "@google-cloud/text-to-speech": "^6.4.0",
     "@keyv/sqlite": "^4.0.5",
     "@langchain/anthropic": "^0.3.28",
     "@langchain/community": "^0.3.56",
