@@ -14,6 +14,7 @@ export const config = {
   gemini_model: process.env.gemini_model || 'gemini-1.5-pro',
   gemini_embed_model: process.env.gemini_embed_model || 'text-embedding-004',
   openai: process.env.OPENAI_API_KEY || '',
+  openai_embed: process.env.OPENAI_EMBED_API_KEY || '',
   openai_model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   openai_embed_model: process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-large',
   claude: process.env.ANTHROPIC_API_KEY || '',
