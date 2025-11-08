@@ -17,10 +17,10 @@ RUN npm run build
 # runtime
 FROM base AS runtime
 
-COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
-EXPOSE 3000
+EXPOSE 5000
 
 CMD ["npm", "start"]

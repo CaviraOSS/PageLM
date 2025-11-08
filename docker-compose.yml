@@ -19,12 +19,14 @@ services:
       - "5000:5000"
 
   frontend:
+    env_file:
+      - .env
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: runtime
       args:
-        VITE_BACKEND_URL: http://localhost:5000
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
         VITE_TIMEOUT: 90000
     container_name: pagelm-frontend
     depends_on:
