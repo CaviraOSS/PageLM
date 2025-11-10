@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.13",
+    "d3-force": "^3.0.0",
     "highlight.js": "^11.11.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -20,8 +21,7 @@
     "rehype-katex": "^7.0.1",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0",
-    "d3-force": "^3.0.0"
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
@@ -38,6 +38,6 @@
     "tailwindcss": "^4.1.13",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.43.0",
-    "vite": "^7.1.5"
+    "vite": "^7.2.2"
   }
 }
