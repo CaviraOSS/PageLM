@@ -20,7 +20,7 @@
 
 ---
 
-**🔥 Spread the Word!**
+# **🔥 Spread the Word!**
 
 <p align="center">
   <a href="https://twitter.com/intent/tweet?text=🤯%20Found%20the%20open%2Dsource%20NotebookLM%20killer%3A%20PageLM%21%20It%20turns%20PDFs%20into%20quizzes%2C%20flashcards%2C%20and%20podcasts.%20Stop%20paying%20for%20study%20tools%21&url=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&hashtags=ai,opensource,education,llm"><img src="https://img.shields.io/badge/Share%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white" alt="Share on X"></a>
