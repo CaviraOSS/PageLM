@@ -20,6 +20,22 @@
 
 ---
 
+**🔥 Spread the Word!**
+
+<p align="center">
+  <a href="https://twitter.com/intent/tweet?text=🤯%20Found%20the%20open%2Dsource%20NotebookLM%20killer%3A%20PageLM%21%20It%20turns%20PDFs%20into%20quizzes%2C%20flashcards%2C%20and%20podcasts.%20Stop%20paying%20for%20study%20tools%21&url=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&hashtags=ai,opensource,education,llm"><img src="https://img.shields.io/badge/Share%20on%20X-000000?style=for-the-badge&logo=x&logoColor=white" alt="Share on X"></a>
+  &nbsp;
+  <a href="https://www.linkedin.com/shareArticle?url=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&title=PageLM%3A%20The%20Open%2DSource%20NotebookLM%20Alternative%20for%20Students&summary=PageLM%20is%20an%20AI%20platform%20that%20transforms%20lecture%20notes%20and%20PDFs%20into%20interactive%20quizzes%20and%20AI%20podcasts.%20A%20great%20example%20of%20full%2Dstack%20AI%20development%20%28Node%2FReact%2FLangChain%29."><img src="https://img.shields.io/badge/Share%20on%20LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Share on LinkedIn"></a>
+  &nbsp;
+  <a href="https://reddit.com/submit?url=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&title=PageLM%3A%20Open%20Source%20AI%20Notebook%20that%20creates%20Quizzes%2C%20Flashcards%2C%20and%20Podcasts"><img src="https://img.shields.io/badge/Share%20on%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Share on Reddit"></a>
+  &nbsp;
+  <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&t=Show%20HN%3A%20PageLM%20%E2%80%93%20Open%20Source%20NotebookLM%20Alternative%20(React%2FNode%2FLangChain)"><img src="https://img.shields.io/badge/Hacker%20News-FF6600?style=for-the-badge&logo=y-combinator&logoColor=white" alt="Submit to Hacker News"></a>
+  &nbsp;
+  <a href="https://dev.to/new/share?url=https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM&title=PageLM%3A%20An%20Open%20Source%20AI%20Education%20Platform%20for%20Quizzes%20and%20Podcasts&prefill=I%20came%20across%20PageLM%20and%20was%20impressed%20by%20its%20architecture%20(Node.js%2FReact%2FLangChain).%20It's%20a%20full%2Dstack%20AI%20platform%20that%20supports%20Ollama%20and%20generates%20structured%20learning%20tools%20like%20ExamLab%20and%20AI%20Podcasts.%20Check%20it%20out%20and%20star%20the%20repo!%0D%0A%0D%0A**Link%20to%20Repo:**%20https%3A%2F%2Fgithub.com%2FCaviraOSS%2FPageLM"><img src="https://img.shields.io/badge/Share%20on%20DEV%20Community-0A0A0A?style=for-the-badge&logo=dev.to&logoColor=white" alt="Share on DEV Community"></a>
+</p>
+
+</div>
+
 ## Demo
 
 <img src=".github/pagelm.png" alt="PageLM Demo"/>
