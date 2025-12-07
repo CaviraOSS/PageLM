@@ -1,4 +1,79 @@
-import { Handler } from '@netlify/functions';
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+
+// This function will run on the serverless Netlify environment
+exports.handler = async (event, context) => {
+    try {
+        // --- 1. Get Credentials from Netlify Environment Variables ---
+        const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+        const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'); // Handle newline characters
+        const sheetId = process.env.SPREADSHEET_ID;
+        const sheetTitle = process.env.SHEET_TITLE || "Laptops"; // Default to "Laptops" tab
+
+        if (!serviceAccountEmail || !privateKey || !sheetId) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: "Missing required environment variables for Google Sheet API." }),
+            };
+        }
+
+        // --- 2. Authenticate and Load Sheet ---
+        const doc = new GoogleSpreadsheet(sheetId);
+        await doc.useServiceAccountAuth({
+            client_email: serviceAccountEmail,
+            private_key: privateKey,
+        });
+
+        await doc.loadInfo(); // Loads document properties and worksheets
+        const sheet = doc.sheetsByTitle[sheetTitle];
+
+        if (!sheet) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: `Sheet titled "${sheetTitle}" not found.` }),
+            };
+        }
+
+        // --- 3. Fetch Data ---
+        const rows = await sheet.getRows();
+
+        // --- 4. Transform Data to Nested JSON Structure ---
+        const laptopData = rows.map(row => {
+            // Note: Data is mapped flat from the sheet (e.g., row.ram) and must be converted to the nested React structure (specs: { ram: ... })
+            return {
+                id: Number(row.id), // Ensure id is a number
+                brand: row.brand,
+                model: row.model,
+                price: Number(row.price), // Ensure price is a number
+                category: row.category,
+                rating: Number(row.rating),
+                image: row.image,
+                specs: {
+                    processor: row.processor,
+                    ram: Number(row.ram), // Assumes sheet has a 'ram' column
+                    storage: row.storage,
+                    display: row.display,
+                    gpu: row.gpu,
+                    battery: row.battery,
+                    weight: row.weight,
+                }
+            };
+        });
+
+        // --- 5. Return JSON Response ---
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(laptopData),
+        };
+
+    } catch (error) {
+        console.error("Function Error:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Failed to fetch data from Google Sheet.", details: error.message }),
+        };
+    }
+};
 import { JWT } from 'google-auth-library';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 
