@@ -47,6 +47,7 @@
     "typescript": "^5.8.3"
   },
   "overrides": {
-    "expr-eval": "npm:expr-eval-fork@^3.0.0"
+    "expr-eval": "npm:expr-eval-fork@^3.0.0",
+    "fast-xml-parser": "^5.4.1"
   }
 }
