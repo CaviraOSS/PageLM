@@ -4,6 +4,7 @@ import * as openai from './openai'
 import * as grok from './grok'
 import * as claude from './claude'
 import * as openrouter from './openrouter'
+import * as minimax from './minimax'
 import { config } from '../../../config/env'
 import type { EmbeddingsLike, LLM } from './types'
 
@@ -17,6 +18,7 @@ function pick(p: string) {
     case 'grok': return grok
     case 'claude': return claude
     case 'openrouter': return openrouter
+    case 'minimax': return minimax
     default: return gemini
   }
 }
