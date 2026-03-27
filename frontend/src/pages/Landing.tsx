@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { AdaptiveErrorBoundary, adaptiveToast } from '@cognicatch/react'
 import { useNavigate } from "react-router-dom";
 import PromptRail from "../components/Landing/PromptRail";
 import PromptBox from "../components/Landing/PromptBox";
@@ -50,6 +51,8 @@ export default function Landing() {
       }
       const r = await chatJSON({ q });
       navigate(`/chat?chatId=${encodeURIComponent(r.chatId)}&q=${encodeURIComponent(q)}`);
+    } catch {
+      adaptiveToast.error("Failed to start chat", "There was a problem reaching the AI. Please try sending your prompt again.");
     } finally {
       setBusy(false);
     }
@@ -62,17 +65,31 @@ export default function Landing() {
           What&apos;d you like to learn today?
         </h1>
 
-        <PromptBox
-          value={prompt}
-          onChange={setPrompt}
-          onSend={() => onSend()}
-          onPickFile={onPickFile}
-          onRemoveFile={onRemoveFile}
-          stagedFileName={stagedFile?.name || null}
-          busy={busy}
-          onDragOver={onDropZoneDragOver}
-          onDrop={onDropZoneDrop}
-        />
+        <AdaptiveErrorBoundary
+          mode="manual"
+          severity="medium"
+          title="Input Area Unavailable"
+          description="An error occurred while loading the chat input or file uploader. Please refresh the page to continue."
+          theme={{
+            backgroundColor: "#0c0a09",
+            textColor: "#e7e5e4",
+            primaryColor: "#1c1917",
+            fontFamily: "'Schibsted Grotesk', sans-serif",
+            borderRadius: "24px"
+          }}
+        >
+          <PromptBox
+            value={prompt}
+            onChange={setPrompt}
+            onSend={() => onSend()}
+            onPickFile={onPickFile}
+            onRemoveFile={onRemoveFile}
+            stagedFileName={stagedFile?.name || null}
+            busy={busy}
+            onDragOver={onDropZoneDragOver}
+            onDrop={onDropZoneDrop}
+          />
+        </AdaptiveErrorBoundary>
 
         <div className="w-full md:w-fit flex">
           <div className="w-full md:w-fit md:min-w-fit p-1.5 rounded-2xl rounded-t-none bg-stone-950 flex flex-col items-start sm:items-center border border-stone-900 border-t-0 border-r-0 border-b-0 sm:border-b shadow-[inset_2px_-2px_15px] shadow-stone-900/80">

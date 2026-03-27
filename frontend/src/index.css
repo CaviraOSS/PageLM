@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@cognicatch/react/style.css";
 
 body {
   font-family: 'Schibsted Grotesk', sans-serif;
