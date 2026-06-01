@@ -23,7 +23,7 @@ export const config = {
   grok_model: process.env.GROK_MODEL || 'grok-2-latest',
   grok_base: process.env.GROK_BASE || 'https://api.x.ai/v1',
   minimax: process.env.MINIMAX_API_KEY || '',
-  minimax_model: process.env.MINIMAX_MODEL || 'MiniMax-M2.7',
+  minimax_model: process.env.MINIMAX_MODEL || 'MiniMax-M3',
   ollama: {
     model: process.env.OLLAMA_MODEL || 'llama4',
     embedModel: process.env.OLLAMA_EMBED_MODEL || '',
