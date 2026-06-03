@@ -21,16 +21,16 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
     
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+    
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v5
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 8
     
     # Backend validation
     - name: Install backend dependencies
@@ -39,6 +39,7 @@ jobs:
     
     - name: Build backend
       run: npm run build
+      working-directory: ./
     
     # Frontend validation
     - name: Install frontend dependencies
@@ -52,6 +53,7 @@ jobs:
     # Security and dependency checks
     - name: Run npm audit (backend)
       run: npm audit --audit-level=moderate
+      working-directory: ./
       continue-on-error: true
     
     - name: Run pnpm audit (frontend)
@@ -77,7 +79,7 @@ jobs:
         context: .
         file: ./backend/Dockerfile
         push: false
-  tags: pagelm-backend:test
+        tags: pagelm-backend:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
@@ -87,7 +89,7 @@ jobs:
         context: ./frontend
         file: ./frontend/Dockerfile
         push: false
-  tags: pagelm-frontend:test
+        tags: pagelm-frontend:test
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -98,6 +100,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v5
+      
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
     
     - name: Setup Node.js
       uses: actions/setup-node@v5
@@ -106,15 +113,12 @@ jobs:
     
     - name: Install dependencies (backend)
       run: npm install
+      working-directory: ./
     
     - name: Check for known vulnerabilities (backend)
       run: npm audit --audit-level=high
+      working-directory: ./
       continue-on-error: false
-    
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 8
     
     - name: Install dependencies (frontend)
       run: pnpm install
@@ -134,8 +138,8 @@ jobs:
     steps:
     - name: Check results
       run: |
-        if [[ "${{ needs.validate.result }}" == "failure" || 
-              "${{ needs.docker-build.result }}" == "failure" || 
+        if [[ "${{ needs.validate.result }}" == "failure" || \
+              "${{ needs.docker-build.result }}" == "failure" || \
               "${{ needs.dependency-check.result }}" == "failure" ]]; then
           echo "❌ Some validation checks failed"
           exit 1
