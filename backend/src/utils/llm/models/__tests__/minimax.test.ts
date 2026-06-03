@@ -29,7 +29,7 @@ describe('MiniMax LLM provider', () => {
 
       expect(ChatOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'MiniMax-M2.7',
+          model: 'MiniMax-M3',
           apiKey: 'test-api-key',
           configuration: { baseURL: 'https://api.minimax.io/v1' },
         }),
@@ -39,12 +39,12 @@ describe('MiniMax LLM provider', () => {
     })
 
     it('should use configured model when provided', () => {
-      const cfg = { minimax: 'key', minimax_model: 'MiniMax-M2.5-highspeed' }
+      const cfg = { minimax: 'key', minimax_model: 'MiniMax-M2.7-highspeed' }
       makeLLM(cfg)
 
       expect(ChatOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'MiniMax-M2.5-highspeed',
+          model: 'MiniMax-M2.7-highspeed',
         }),
       )
     })

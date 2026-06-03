@@ -9,7 +9,7 @@ import { makeLLM } from '../minimax'
 describe('MiniMax integration', () => {
   const apiKey = process.env.MINIMAX_API_KEY
 
-  it.skipIf(!apiKey)('should invoke MiniMax-M2.7 and return a response', async () => {
+  it.skipIf(!apiKey)('should invoke MiniMax-M3 and return a response', async () => {
     const llm = makeLLM({ minimax: apiKey, temp: 0.1, max_tokens: 256 })
     const result = await llm.invoke([
       { role: 'user', content: 'Reply with exactly: hello world' },
@@ -19,10 +19,10 @@ describe('MiniMax integration', () => {
     expect(result.content.toLowerCase()).toContain('hello')
   }, 30000)
 
-  it.skipIf(!apiKey)('should invoke MiniMax-M2.5-highspeed model', async () => {
+  it.skipIf(!apiKey)('should invoke MiniMax-M2.7-highspeed model', async () => {
     const llm = makeLLM({
       minimax: apiKey,
-      minimax_model: 'MiniMax-M2.5-highspeed',
+      minimax_model: 'MiniMax-M2.7-highspeed',
       temp: 0.1,
       max_tokens: 128,
     })
