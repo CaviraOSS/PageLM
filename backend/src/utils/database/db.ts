@@ -55,7 +55,7 @@ export async function getRetriever(
       metadata: d.metadata || {},
     }))
     if (!memoryStores[collection]) {
-      const { MemoryVectorStore } = await import("langchain/vectorstores/memory")
+      const { MemoryVectorStore } = await import("@langchain/classic/vectorstores/memory")
       memoryStores[collection] = await MemoryVectorStore.fromDocuments(docs, embeddings)
     }
     retrieverCache[collection] = memoryStores[collection].asRetriever({ k: 4 })
