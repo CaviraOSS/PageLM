@@ -51,6 +51,11 @@
   },
   "overrides": {
     "expr-eval": "npm:expr-eval-fork@^3.0.0",
-    "fast-xml-parser": "^5.4.1"
+    "fast-xml-parser": "^5.4.1",
+    "node-gyp": "^11.2.0",
+    "tar": "^7.5.16",
+    "make-fetch-happen": "^15.0.6",
+    "cacache": "^21.0.1",
+    "@tootallnate/once": "^2.0.0"
   }
 }
