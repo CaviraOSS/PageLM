@@ -95,7 +95,7 @@ The platform provides a modern interface for students, educators, and researcher
 | **Frontend**   | Vite, React, TailwindCSS                 |
 | **Database**   | JSON (default), optional vector DB       |
 | **AI/ML**      | Multiple LLM providers, embeddings       |
-| **Audio**      | Edge TTS, ElevenLabs, Google TTS         |
+| **Audio**      | Edge TTS, ElevenLabs, Google TTS, Speech SDK (OpenAI, Cartesia, Hume, MiniMax + 10 more) |
 | **Deployment** | Docker, Docker Compose                   |
 | **Docs**       | pdf-lib, mammoth, pdf-parse              |
 
