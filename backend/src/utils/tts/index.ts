@@ -10,12 +10,12 @@ export type TSay = (segs: TSeg[], dir: string, base: string, emit?: (m: any) => 
 // @speech-sdk/core is ESM-only and this backend compiles to CJS, so the import() must survive tsc transpilation
 const dynImport = new Function('s', 'return import(s)') as (s: string) => Promise<any>
 
-let sdkLoad: Promise<{ generateSpeech: any; factories: Record<string, any> }> | null = null
+let sdkLoad: Promise<{ generateConversation: any; factories: Record<string, any> }> | null = null
 
 function sdk() {
   if (!sdkLoad) {
     sdkLoad = Promise.all([dynImport('@speech-sdk/core'), dynImport('@speech-sdk/core/providers')]).then(([core, prov]) => ({
-      generateSpeech: core.generateSpeech,
+      generateConversation: core.generateConversation,
       factories: {
         cartesia: prov.createCartesia,
         deepgram: prov.createDeepgram,
@@ -197,24 +197,19 @@ function sdk_model(m: string, factories: Record<string, any>) {
 }
 
 async function synth_speechsdk(segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) {
-  const { generateSpeech, factories } = await sdk()
+  const { generateConversation, factories } = await sdk()
   const v0 = config.speech_sdk_voice_a || 'alloy'
   const v1 = config.speech_sdk_voice_b || 'echo'
   const model = sdk_model(config.speech_sdk_model || 'openai/gpt-4o-mini-tts', factories)
-  const files: string[] = []
+  const turns = segs.map((s, i) => ({ text: s.text, voice: s.voice || (i % 2 ? v1 : v0) }))
 
-  for (let i = 0; i < segs.length; i++) {
-    const s = segs[i]
-    const v = s.voice || (i % 2 ? v1 : v0)
-    const r = await generateSpeech({ model, text: s.text, voice: v, output: { format: 'mp3' } })
-    const f = path.join(dir, `${base}.${i}.mp3`)
-    await fs.promises.writeFile(f, r.audio.uint8Array)
-    files.push(f)
-    emit && emit({ type: 'audio_progress', i, len: segs.length })
-  }
+  // one call renders the whole dialogue: native multi-speaker models when the provider has one, otherwise per-turn synthesis stitched and loudness-normalized (-20 dBFS) by the SDK, so no ffmpeg pass is needed
+  const r = await generateConversation({ model, turns, output: { format: 'mp3' } })
 
   const out = path.join(dir, `${base}.mp3`)
-  return await ff(dir, files, out, emit)
+  await fs.promises.writeFile(out, r.audio.uint8Array)
+  emit && emit({ type: 'audio_progress', i: segs.length - 1, len: segs.length })
+  return out
 }
 
 export const tts: TSay = async (segs, dir, base, emit) => {
