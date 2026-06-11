@@ -18,13 +18,13 @@
     "@google-cloud/speech": "^7.2.0",
     "@google-cloud/text-to-speech": "^6.3.0",
     "@keyv/sqlite": "^4.0.5",
-    "@langchain/anthropic": "^0.3.28",
-    "@langchain/community": "^0.3.56",
-    "@langchain/core": "^0.3.78",
-    "@langchain/google-genai": "^0.2.18",
-    "@langchain/langgraph": "^0.4.9",
-    "@langchain/ollama": "^0.2.4",
-    "@langchain/openai": "^0.6.12",
+    "@langchain/anthropic": "^1.4.0",
+    "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.1.48",
+    "@langchain/google-genai": "^2.1.31",
+    "@langchain/langgraph": "^1.3.7",
+    "@langchain/ollama": "^1.2.7",
+    "@langchain/openai": "^1.4.7",
     "@pdf-lib/fontkit": "^1.1.1",
     "@speech-sdk/core": "^0.15.0",
     "busboy": "^1.6.0",
@@ -32,7 +32,7 @@
     "d3-force": "^3.0.0",
     "docxtemplater": "^3.66.7",
     "keyv": "^5.5.1",
-    "langchain": "^0.3.7",
+    "langchain": "^1.4.4",
     "mammoth": ">=1.11.0",
     "marked": "^16.3.0",
     "node-edge-tts": "^1.2.8",
@@ -41,7 +41,9 @@
     "pdf-parse": "^1.1.1",
     "pizzip": "^3.2.0",
     "ws": "^8.18.3",
-    "youtube-transcript": "^1.2.1"
+    "youtube-transcript": "^1.2.1",
+    "@langchain/textsplitters": "^1.0.1",
+    "@langchain/classic": "^1.0.34"
   },
   "devDependencies": {
     "@types/node": "^24.5.1",
@@ -52,6 +54,11 @@
   },
   "overrides": {
     "expr-eval": "npm:expr-eval-fork@^3.0.0",
-    "fast-xml-parser": "^5.4.1"
+    "fast-xml-parser": "^5.4.1",
+    "node-gyp": "^11.2.0",
+    "tar": "^7.5.16",
+    "make-fetch-happen": "^15.0.6",
+    "cacache": "^21.0.1",
+    "@tootallnate/once": "^2.0.0"
   }
 }
