@@ -320,7 +320,10 @@ setInterval(async () => {
 
         if (hh === 8 && mm < 5 && lastDigest !== today) {
             lastDigest = today
-            const tomorrow = new Date(today + "T23:59:59Z").toISOString()
+            const tomorrowDate = new Date(now)
+            tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+            tomorrowDate.setHours(23, 59, 59, 999)
+            const tomorrow = tomorrowDate.toISOString()
             const tasks = await plannerService.listTasks({ dueBefore: tomorrow })
             const dueToday = tasks.filter(t => new Date(t.dueAt).toDateString() === new Date(today).toDateString())
             const todaySessions = await plannerService.getTodaySessions()

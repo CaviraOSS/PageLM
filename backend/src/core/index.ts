@@ -1,6 +1,6 @@
 import cors from 'cors';
 import path from 'path'
-import server from '../utils/server/server'
+import server from '../utils/server/server.js'
 import { registerRoutes } from './router'
 import { loggerMiddleware } from './middleware'
 
