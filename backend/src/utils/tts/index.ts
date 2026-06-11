@@ -7,6 +7,36 @@ import { config } from '../../config/env'
 export type TSeg = { text: string; voice?: string }
 export type TSay = (segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) => Promise<string>
 
+// @speech-sdk/core is ESM-only and this backend compiles to CJS, so the import() must survive tsc transpilation
+const dynImport = new Function('s', 'return import(s)') as (s: string) => Promise<any>
+
+let sdkLoad: Promise<{ generateConversation: any; factories: Record<string, any> }> | null = null
+
+function sdk() {
+  if (!sdkLoad) {
+    sdkLoad = Promise.all([dynImport('@speech-sdk/core'), dynImport('@speech-sdk/core/providers')]).then(([core, prov]) => ({
+      generateConversation: core.generateConversation,
+      factories: {
+        cartesia: prov.createCartesia,
+        deepgram: prov.createDeepgram,
+        elevenlabs: prov.createElevenLabs,
+        'fal-ai': prov.createFal,
+        'fish-audio': prov.createFishAudio,
+        google: prov.createGoogle,
+        hume: prov.createHume,
+        inworld: prov.createInworld,
+        minimax: prov.createMiniMax,
+        mistral: prov.createMistral,
+        murf: prov.createMurf,
+        openai: prov.createOpenAI,
+        resemble: prov.createResemble,
+        xai: prov.createXai
+      }
+    }))
+  }
+  return sdkLoad
+}
+
 function ff(dir: string, parts: string[], out: string, emit?: (m: any) => void) {
   return new Promise<string>((res, rej) => {
     const list = path.join(dir, 'list.txt')
@@ -155,15 +185,44 @@ async function synth_google(segs: TSeg[], dir: string, base: string, emit?: (m: 
   return await ff(dir, files, out, emit)
 }
 
+function sdk_model(m: string, factories: Record<string, any>) {
+  // with SPEECHBASE_API_KEY set, the bare string routes every provider through the hosted gateway; otherwise call the provider directly with its own env key
+  if (process.env.SPEECHBASE_API_KEY) return m
+  const i = m.indexOf('/')
+  const provider = i === -1 ? m : m.slice(0, i)
+  const modelId = i === -1 ? '' : m.slice(i + 1)
+  const factory = factories[provider]
+  if (!factory) throw new Error(`speechsdk_unknown_provider_${provider}`)
+  return factory()(modelId || undefined)
+}
+
+async function synth_speechsdk(segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) {
+  const { generateConversation, factories } = await sdk()
+  const v0 = config.speech_sdk_voice_a || 'alloy'
+  const v1 = config.speech_sdk_voice_b || 'echo'
+  const model = sdk_model(config.speech_sdk_model || 'openai/gpt-4o-mini-tts', factories)
+  const turns = segs.map((s, i) => ({ text: s.text, voice: s.voice || (i % 2 ? v1 : v0) }))
+
+  // one call renders the whole dialogue: native multi-speaker models when the provider has one, otherwise per-turn synthesis stitched and loudness-normalized (-20 dBFS) by the SDK, so no ffmpeg pass is needed
+  const r = await generateConversation({ model, turns, output: { format: 'mp3' } })
+
+  const out = path.join(dir, `${base}.mp3`)
+  await fs.promises.writeFile(out, r.audio.uint8Array)
+  emit && emit({ type: 'audio_progress', i: segs.length - 1, len: segs.length })
+  return out
+}
+
 export const tts: TSay = async (segs, dir, base, emit) => {
   const p = config.tts_provider || 'edge'
-  
+
   if (p === 'edge') {
     return synth_edge(segs, dir, base, emit)
   } else if (p === 'eleven') {
     return synth_eleven(segs, dir, base, emit)
   } else if (p === 'google') {
     return synth_google(segs, dir, base, emit)
+  } else if (p === 'speechsdk') {
+    return synth_speechsdk(segs, dir, base, emit)
   } else {
     return synth_edge(segs, dir, base, emit)
   }
