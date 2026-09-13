@@ -24,6 +24,9 @@ export const config = {
   grok_base: process.env.GROK_BASE || 'https://api.x.ai/v1',
   minimax: process.env.MINIMAX_API_KEY || '',
   minimax_model: process.env.MINIMAX_MODEL || 'MiniMax-M3',
+  apiroute: process.env.API_ROUTE_API_KEY || process.env.APIROUTE_API_KEY || '',
+  apiroute_model: process.env.API_ROUTE_MODEL || process.env.APIROUTE_MODEL || 'gpt-5.4-mini',
+  apiroute_base: process.env.API_ROUTE_BASE_URL || 'https://www.api-route.com/v1',
   ollama: {
     model: process.env.OLLAMA_MODEL || 'llama4',
     embedModel: process.env.OLLAMA_EMBED_MODEL || '',
