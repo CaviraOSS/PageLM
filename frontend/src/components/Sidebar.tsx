@@ -78,22 +78,24 @@ export default function Sidebar() {
           </div>
 
           {/* List of chats, closing drawer upon navigation */}
-          <div className="flex-1 overflow-y-auto space-y-1">
-            {chats?.chats?.length ? (
-              chats.chats.map((chat) => (
-                <Link
-                  key={chat.id}
-                  to={`/chat/?chatId=${chat.id}`}
-                  onClick={() => setIsToggled(false)}
-                  className='p-2.5 hover:text-stone-100 hover:bg-stone-900/90 rounded-xl block text-sm truncate border border-transparent hover:border-stone-800 transition-colors'
-                >
-                  {chat.title || 'Untitled Chat'}
-                </Link>
-              ))
-            ) : (
-              <p className="text-xs text-stone-500 text-center py-6">No previous chats</p>
-            )}
-          </div>
+<div className="flex-1 overflow-y-auto space-y-1">
+  {chats === null ? (
+    <p className="text-xs text-stone-500 text-center py-6">Loading…</p>
+  ) : chats.chats.length ? (
+    chats.chats.map((chat) => (
+      <Link
+        key={chat.id}
+        to={`/chat/?chatId=${chat.id}`}
+        onClick={() => setIsToggled(false)}
+        className="p-2.5 hover:text-stone-100 hover:bg-stone-900/90 rounded-xl block text-sm truncate border border-transparent hover:border-stone-800 transition-colors"
+      >
+        {chat.title || "Untitled Chat"}
+      </Link>
+    ))
+  ) : (
+    <p className="text-xs text-stone-500 text-center py-6">No previous chats</p>
+  )}
+</div>
         </div>
 
         <div
