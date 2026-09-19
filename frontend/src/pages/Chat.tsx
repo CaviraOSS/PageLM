@@ -72,6 +72,7 @@ export default function Chat() {
   const [connecting, setConnecting] = useState<boolean>(!!(initialChatId || initialQuestion));
   const [awaitingAnswer, setAwaitingAnswer] = useState<boolean>(false);
   const [topic, setTopic] = useState<string>("");
+  const [showTopics, setShowTopics] = useState(true);
   const { setDocument } = useCompanion();
 
   const selPopupRef = useRef<HTMLDivElement>(null);
@@ -294,17 +295,36 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 mt-20 lg:mt-6 mb-16">
-        <div className="flex-1 pr-6">
-          <div className="w-full max-w-5xl mx-auto p-4 pt-2 pb-28">
+      {!showTopics && (
+        <button
+          onClick={() => setShowTopics(true)}
+          className="fixed top-5 right-6 z-20 hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-stone-950/90 border border-zinc-800 text-stone-400 hover:text-stone-100 hover:bg-stone-900 text-xs font-medium shadow-lg backdrop-blur transition-colors"
+          title="Show Important Topics"
+          aria-label="Show Important Topics"
+        >
+          <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="M15 3v18" />
+          </svg>
+          <span>Topics ({cards.length})</span>
+        </button>
+      )}
+
+      <div
+        className={`grid grid-cols-1 ${
+          showTopics ? "xl:grid-cols-[1fr_320px] lg:grid-cols-[1fr_280px]" : ""
+        } gap-6 mt-20 lg:mt-6 mb-16`}
+      >
+        <div className="flex-1 min-w-0 pr-0 lg:pr-2">
+          <div className="w-full max-w-4xl mx-auto p-2 sm:p-4 pt-2 pb-28">
             <div className="space-y-6">
               {list.map((m, i) => {
                 const userBubble = "inline-block max-w-[85%] bg-stone-900/70 border border-zinc-800 rounded-2xl px-4 py-3";
                 if (m.role === "assistant") {
                   return (
                     <div key={i} className="w-full flex justify-start">
-                      <div className="w-full mx-auto rounded-3xl bg-stone-950/90 border border-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-black/10 backdrop-blur px-6 md:px-8 py-6 md:py-8 max-w-[min(100%,1000px)]">
-                        <div className="animate-[fadeIn_300ms_ease-out] leading-7 md:leading-8">
+                      <div className="w-full mx-auto rounded-3xl bg-stone-950/90 border border-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.45)] ring-1 ring-black/10 backdrop-blur px-5 sm:px-8 py-5 sm:py-8 max-w-full">
+                        <div className="animate-[fadeIn_300ms_ease-out] leading-7 md:leading-8 overflow-x-auto">
                           <MarkdownView md={m.content} />
                         </div>
                       </div>
@@ -350,7 +370,13 @@ export default function Chat() {
           </div>
         </div>
 
-        <FlashCards items={cards} onAdd={({ kind, title, content }) => addToBag(kind, title, content)} />
+        {showTopics && (
+          <FlashCards
+            items={cards}
+            onAdd={({ kind, title, content }) => addToBag(kind, title, content)}
+            onToggleCollapse={() => setShowTopics(false)}
+          />
+        )}
       </div>
 
       <SelectionPopup

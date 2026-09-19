@@ -3,16 +3,33 @@ import type { FlashCard } from "../../lib/api";
 type Props = {
   items?: FlashCard[];
   onAdd: (item: { kind: "flashcard" | "note"; title: string; content: string }) => void;
+  onToggleCollapse?: () => void;
 };
 
-export default function FlashCards({ items = [], onAdd }: Props) {
+export default function FlashCards({ items = [], onAdd, onToggleCollapse }: Props) {
   return (
-    <div className="hidden lg:block">
+    <div className="hidden lg:block w-full">
       <div className="sticky top-6 h-[calc(100vh-8rem)] flex flex-col">
-        <div className="mb-5">
+        <div className="mb-4">
           <div className="rounded-2xl bg-stone-950/80 border border-zinc-900 px-4 py-3 flex items-center justify-between">
-            <h3 className="text-stone-100 font-semibold tracking-wide">Important Topics</h3>
-            <span className="text-xs text-stone-400">{items.length}</span>
+            <div className="flex items-center gap-2">
+              <h3 className="text-stone-100 font-semibold tracking-wide text-sm">Important Topics</h3>
+              <span className="text-[11px] font-medium text-stone-400 bg-stone-900 px-2 py-0.5 rounded-full border border-zinc-800">
+                {items.length}
+              </span>
+            </div>
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-100 hover:bg-stone-900 transition-colors"
+                title="Collapse sidebar"
+                aria-label="Collapse topics sidebar"
+              >
+                <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
