@@ -5,6 +5,7 @@ import * as grok from './grok'
 import * as claude from './claude'
 import * as openrouter from './openrouter'
 import * as minimax from './minimax'
+import * as apiroute from './apiroute'
 import { config } from '../../../config/env'
 import type { EmbeddingsLike, LLM } from './types'
 
@@ -19,6 +20,10 @@ function pick(p: string) {
     case 'claude': return claude
     case 'openrouter': return openrouter
     case 'minimax': return minimax
+    case 'apiroute':
+    case 'api_route':
+    case 'api-route':
+      return apiroute
     default: return gemini
   }
 }
