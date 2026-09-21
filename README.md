@@ -103,7 +103,7 @@ The platform provides a modern interface for students, educators, and researcher
 | **Frontend**   | Vite, React, TailwindCSS                 |
 | **Database**   | JSON (default), optional vector DB       |
 | **AI/ML**      | Multiple LLM providers, embeddings       |
-| **Audio**      | Edge TTS, ElevenLabs, Google TTS, Speech SDK (OpenAI, Cartesia, Hume, MiniMax + 10 more) |
+| **Audio**      | Edge TTS, ElevenLabs, Google TTS, Speech SDK (OpenAI, Cartesia, Hume, MiniMax + 10 more), ModelBest VoxCPM |
 | **Deployment** | Docker, Docker Compose                   |
 | **Docs**       | pdf-lib, mammoth, pdf-parse              |
 
@@ -183,6 +183,8 @@ All configuration is handled via environment variables:
 - **File Upload Limits** – Customize size/format limits
 
 See `.env.example` for all options.
+
+For ModelBest VoxCPM podcasts, set `TTS_PROVIDER=voxcpm`, `VOXCPM_API_KEY`, and optionally `VOXCPM_MODEL` and `VOXCPM_BASE_URL`. The default model is `VoxCPM2`. This integration uses VoxCPM's default voice; reference-audio cloning is not included yet.
 
 ---
 

@@ -3,6 +3,7 @@ import path from 'path'
 import { spawn } from 'child_process'
 import { EdgeTTS } from 'node-edge-tts'
 import { config } from '../../config/env'
+import { requestVoxCpm } from './voxcpm'
 
 export type TSeg = { text: string; voice?: string }
 export type TSay = (segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) => Promise<string>
@@ -64,6 +65,28 @@ function ff(dir: string, parts: string[], out: string, emit?: (m: any) => void) 
       rej(err)
     })
   })
+}
+
+async function synth_voxcpm(segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) {
+  const apiKey = config.voxcpm_api_key
+  if (!apiKey) throw new Error('voxcpm_api_key_missing')
+  if (segs.length === 0) throw new Error('voxcpm_segments_missing')
+
+  const model = config.voxcpm_model || 'VoxCPM2'
+  const baseUrl = (config.voxcpm_base_url || 'https://api.modelbest.cn/v1').replace(/\/$/, '')
+  const files: string[] = []
+
+  for (let i = 0; i < segs.length; i++) {
+    if (!segs[i].text.trim()) throw new Error(`voxcpm_segment_${i + 1}_text_missing`)
+    const wav = await requestVoxCpm(segs[i].text, { apiKey, model, baseUrl })
+    const f = path.join(dir, `${base}.${i}.wav`)
+    await fs.promises.writeFile(f, wav)
+    files.push(f)
+    emit && emit({ type: 'audio_progress', i, len: segs.length })
+  }
+
+  const out = path.join(dir, `${base}.mp3`)
+  return ff(dir, files, out, emit)
 }
 
 async function synth_edge(segs: TSeg[], dir: string, base: string, emit?: (m: any) => void) {
@@ -223,6 +246,8 @@ export const tts: TSay = async (segs, dir, base, emit) => {
     return synth_google(segs, dir, base, emit)
   } else if (p === 'speechsdk') {
     return synth_speechsdk(segs, dir, base, emit)
+  } else if (p === 'voxcpm') {
+    return synth_voxcpm(segs, dir, base, emit)
   } else {
     return synth_edge(segs, dir, base, emit)
   }
