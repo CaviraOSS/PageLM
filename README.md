@@ -79,7 +79,7 @@ The platform provides a modern interface for students, educators, and researcher
 
 ### Supported AI Models
 
-- Google Gemini • OpenAI GPT • Anthropic Claude • xAI Grok • [MiniMax](https://www.minimax.io/) • [API Route](https://www.api-route.com) • Ollama (local) • OpenRouter
+- Google Gemini • OpenAI GPT • Anthropic Claude • xAI Grok • [MiniMax](https://www.minimax.io/) • [API Route](https://www.api-route.com) • Ollama (local) • OpenRouter • [Requesty](https://requesty.ai)
 
 ### Embedding Providers
 
