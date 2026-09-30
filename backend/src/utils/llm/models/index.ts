@@ -5,6 +5,7 @@ import * as grok from './grok'
 import * as claude from './claude'
 import * as openrouter from './openrouter'
 import * as requesty from './requesty'
+import * as cheaperinference from './cheaperinference'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
 import { config } from '../../../config/env'
@@ -21,6 +22,7 @@ function pick(p: string) {
     case 'claude': return claude
     case 'openrouter': return openrouter
     case 'requesty': return requesty
+    case 'cheaperinference': return cheaperinference
     case 'minimax': return minimax
     case 'apiroute':
     case 'api_route':
