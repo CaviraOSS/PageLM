@@ -4,7 +4,7 @@ import type { MkLLM, MkEmb, EmbeddingsLike } from './types'
 
 export const makeLLM: MkLLM = (cfg: any) => {
   const m = new ChatOpenAI({
-    model: cfg.atlascloud_model || 'deepseek-ai/DeepSeek-V3.1-Terminus',
+    model: cfg.atlascloud_model || 'deepseek-ai/deepseek-v4-flash',
     apiKey: cfg.atlascloud || '',
     configuration: { baseURL: cfg.atlascloud_base || 'https://api.atlascloud.ai/v1' },
     temperature: cfg.temp ?? 0.7,

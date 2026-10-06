@@ -18,7 +18,7 @@ export const config = {
   cheaperinference_model: process.env.CHEAPER_INFERENCE_MODEL || 'gpt-5.4-mini',
   cheaperinference_base: process.env.CHEAPER_INFERENCE_BASE_URL || 'https://api.cheaperinference.com/v1',
   atlascloud: process.env.ATLASCLOUD_API_KEY || '',
-  atlascloud_model: process.env.ATLASCLOUD_MODEL || 'deepseek-ai/DeepSeek-V3.1-Terminus',
+  atlascloud_model: process.env.ATLASCLOUD_MODEL || 'deepseek-ai/deepseek-v4-flash',
   atlascloud_base: process.env.ATLASCLOUD_BASE_URL || 'https://api.atlascloud.ai/v1',
   gemini: process.env.gemini || process.env.GOOGLE_API_KEY || '',
   gemini_model: process.env.gemini_model || 'gemini-1.5-pro',

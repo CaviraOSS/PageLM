@@ -26,7 +26,7 @@ describe('Atlas Cloud LLM provider', () => {
 
     expect(ChatOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'deepseek-ai/DeepSeek-V3.1-Terminus',
+        model: 'deepseek-ai/deepseek-v4-flash',
         apiKey: 'test-key',
         configuration: { baseURL: 'https://api.atlascloud.ai/v1' },
       }),
@@ -38,13 +38,13 @@ describe('Atlas Cloud LLM provider', () => {
   it('should use configured model and base URL', () => {
     makeLLM({
       atlascloud: 'key',
-      atlascloud_model: 'zai-org/glm-4.7',
+      atlascloud_model: 'zai-org/glm-5.3-flash',
       atlascloud_base: 'https://gateway.example.test/v1',
     })
 
     expect(ChatOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'zai-org/glm-4.7',
+        model: 'zai-org/glm-5.3-flash',
         configuration: { baseURL: 'https://gateway.example.test/v1' },
       }),
     )
