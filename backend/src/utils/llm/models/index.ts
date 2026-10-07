@@ -6,6 +6,7 @@ import * as claude from './claude'
 import * as openrouter from './openrouter'
 import * as requesty from './requesty'
 import * as cheaperinference from './cheaperinference'
+import * as atlascloud from './atlascloud'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
 import { config } from '../../../config/env'
@@ -23,6 +24,7 @@ function pick(p: string) {
     case 'openrouter': return openrouter
     case 'requesty': return requesty
     case 'cheaperinference': return cheaperinference
+    case 'atlascloud': return atlascloud
     case 'minimax': return minimax
     case 'apiroute':
     case 'api_route':
