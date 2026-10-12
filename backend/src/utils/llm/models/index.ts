@@ -10,6 +10,7 @@ import * as atlascloud from './atlascloud'
 import * as opper from './opper'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
+import * as litellm from './litellm'
 import { config } from '../../../config/env'
 import type { EmbeddingsLike, LLM } from './types'
 
@@ -28,6 +29,7 @@ function pick(p: string) {
     case 'atlascloud': return atlascloud
     case 'opper': return opper
     case 'minimax': return minimax
+    case 'litellm': return litellm
     case 'apiroute':
     case 'api_route':
     case 'api-route':
