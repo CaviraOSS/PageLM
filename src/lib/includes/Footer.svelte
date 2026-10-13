@@ -9,7 +9,7 @@
 
 		<span class="text-zinc-600">•</span>
 
-		<span>Maintained by <a href="https://cavira.app" class="text-zinc-400 hover:text-zinc-200 transition-colors">CaviraOSS</a></span>
+		<span>From <a href="https://cavira.app" class="text-zinc-400 hover:text-zinc-200 transition-colors">CaviraOSS</a></span>
 
 		<span class="text-zinc-600">•</span>
 

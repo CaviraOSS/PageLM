@@ -2,7 +2,9 @@
 	import { getIcon } from "$lib/icons/icons.js";
 	import { fly, fade } from "svelte/transition";
 	import { onMount, onDestroy, tick } from "svelte";
-
+	import { page } from "$app/stores";
+	import { goto } from "$app/navigation";
+	import { showAlert } from "$lib/alerts.svelte.js";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 
 	let { cyclePrompts = false } = $props();
@@ -18,7 +20,7 @@
 		if (textareaEl) {
 			const handleKeydown = (event) => {
 				if (!event.ctrlKey && !event.metaKey && event.key.length === 1) {
-					textareaEl.focus();
+					textareaEl?.focus();
 				}
 			};
 			window.addEventListener("keydown", handleKeydown);
@@ -48,7 +50,7 @@
 		if (textareaEl) {
 			const handleKeydown = (event) => {
 				if (!event.ctrlKey && !event.metaKey && event.key.length === 1) {
-					textareaEl.focus();
+					textareaEl?.focus();
 				}
 			};
 			window.addEventListener("keydown", handleKeydown);
@@ -97,13 +99,25 @@
 		promptText = text;
 		await tick();
 		autoResize();
-		textareaEl.focus();
+		textareaEl?.focus();
 	}
 
 	function handleKeydown(event) {
-		if (event.key === "Enter" && !event.shiftKey) {
+		if (event instanceof KeyboardEvent) {
+			if (event.key !== "Enter" || event.shiftKey) return;
 			event.preventDefault();
-			// TODO: Handle sending the prompt
+		}
+
+		const trimmed = promptText.trim();
+		if (!trimmed) {
+			showAlert("Please enter a prompt before sending.");
+			return;
+		}
+
+		if ($page.url.pathname !== "/chat") {
+			goto("/chat", {
+				state: { prompt: trimmed, sources: $state.snapshot(sources), model: $state.snapshot(selectedModel), mode: $state.snapshot(selectedChatMode) },
+			});
 		}
 	}
 
@@ -221,7 +235,7 @@
 				rows="1"
 			></textarea>
 
-			<button class="text-[#71717a] hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg z-10 cursor-pointer mb-0.5">
+			<button onclick={handleKeydown} class="text-[#71717a] hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg z-10 cursor-pointer mb-0.5">
 				{@html getIcon("send", "size-5")}
 			</button>
 		</div>

@@ -5,6 +5,8 @@
 	import Aside from "$lib/includes/Aside.svelte";
 	import Footer from "$lib/includes/Footer.svelte";
 	import PromptBox from "$lib/components/PromptBox.svelte";
+	import Alerts from "$lib/components/Alerts.svelte";
+	import { showAlert } from '$lib/alerts.svelte.js';
 
 	let prompts = [
 		{
@@ -28,12 +30,16 @@
 			i: "paintBrush"
 		}
 	]
+
+	const currentHour = new Date().getHours();
+	const greeting = currentHour < 12 ? "Good morning!" : currentHour < 18 ? "Good afternoon!" : "Good evening!";
 </script>
 
 <Aside />
+<Alerts />
 
 <main class="flex flex-col items-center justify-center min-h-screen p-2 lg:p-24 gap-1">
-	<h1 class="text-3xl lg:text-4xl text-zinc-500">Good morning, Elvoro!</h1>
+	<h1 class="text-3xl lg:text-4xl text-zinc-500">{greeting}</h1>
 	<h1 class="text-2xl lg:text-4xl text-zinc-300 text-center">What are we studying today?</h1>
 
 	<div class="w-full lg:max-w-3xl flex flex-col gap-4 p-4 mt-24">

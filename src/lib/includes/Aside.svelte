@@ -57,11 +57,11 @@
 
 	<aside transition:popIn={{ x: -50, duration: 600 }} class="absolute bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 z-40 max-w-xl w-full h-fit lg:left-4 top-4 p-6 pb-5 lg:p-10 lg:pb-9 flex justify-between shadow-2xl">
 		<div class="flex flex-col gap-4 font-funnel text-4xl">
-			{#each ["Home", "History", "Notes", "Settings"] as item, i}
-				<button transition:fly={{ x: -20, duration: 400, delay: 150 + (i + 1) * 50, easing: quintOut }} class="text-left group hover:text-zinc-100 rounded-xl duration-150 transition-all flex flex-col h-12 overflow-hidden">
-					<span in:typewriter={{ delay: 200 + (i + 1) * 50 }} class="group-hover:-mt-12 duration-300 transition-all">{item}</span>
-					<span in:typewriter={{ delay: 200 + (i + 1) * 50 }} class="mt-2 duration-300 transition-all">{item}</span>
-				</button>
+			{#each [{ text: "Home", href: "/" }, { text: "History", href: "/history" }, { text: "Notes", href: "/notes" }, { text: "Settings", href: "/settings" }] as item, i}
+				<a href={item.href} transition:fly={{ x: -20, duration: 400, delay: 150 + (i + 1) * 50, easing: quintOut }} class="text-left group hover:text-zinc-100 rounded-xl duration-150 transition-all flex flex-col h-12 overflow-hidden">
+					<span in:typewriter={{ delay: 200 + (i + 1) * 50 }} class="group-hover:-mt-12 duration-300 transition-all">{item.text}</span>
+					<span in:typewriter={{ delay: 200 + (i + 1) * 50 }} class="mt-2 duration-300 transition-all">{item.text}</span>
+				</a>
 			{/each}
 		</div>
 
@@ -72,14 +72,14 @@
 			</button>
 
 			<div class="mt-auto items-end flex flex-col gap-2">
-				{#each ["GitHub", "Discord", "Website"] as link, i}
-					<a href="#" transition:fly={{ y: 10, duration: 400, delay: 300 + (i + 1) * 50, easing: quintOut }} class="flex flex-col h-8 group overflow-hidden py-1 hover:text-zinc-100 ml-auto cursor-pointer">
-						<div class="flex items-center gap-4 group-hover:-mt-7 duration-300 transition-all">
-							<span in:typewriter={{ delay: 350 + (i + 1) * 50 }}>{link}</span>
+				{#each [{ text: "GitHub", href: "https://github.com/CaviraOSS" }, { text: "Discord", href: "https://cavira.app/discord" }, { text: "Website", href: "https://cavira.app" }] as link, i}
+					<a href={link.href} target="_blank" transition:fly={{ y: 10, duration: 400, delay: 300 + (i + 1) * 50, easing: quintOut }} class="flex flex-col h-10 group overflow-hidden py-1 hover:text-zinc-100 ml-auto cursor-pointer">
+						<div class="flex items-center gap-4 group-hover:-mt-10 duration-300 transition-all">
+							<span in:typewriter={{ delay: 350 + (i + 1) * 50 }}>{link.text}</span>
 							{@html getIcon("arrowTop", "size-5 rotate-45 mt-px")}
 						</div>
 						<div class="flex items-center gap-4">
-							<span in:typewriter={{ delay: 350 + (i + 1) * 50 }}>{link}</span>
+							<span in:typewriter={{ delay: 350 + (i + 1) * 50 }}>{link.text}</span>
 							{@html getIcon("arrowTop", "size-5 rotate-45 mt-px")}
 						</div>
 					</a>
