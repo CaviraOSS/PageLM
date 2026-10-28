@@ -41,6 +41,10 @@ export const config = {
   apiroute: process.env.API_ROUTE_API_KEY || process.env.APIROUTE_API_KEY || '',
   apiroute_model: process.env.API_ROUTE_MODEL || process.env.APIROUTE_MODEL || 'gpt-5.4-mini',
   apiroute_base: process.env.API_ROUTE_BASE_URL || 'https://www.api-route.com/v1',
+  litellm: process.env.LITELLM_API_KEY || '',
+  litellm_model: process.env.LITELLM_MODEL || '',
+  litellm_embed_model: process.env.LITELLM_EMBED_MODEL || '',
+  litellm_base: process.env.LITELLM_BASE_URL || 'http://localhost:4000',
   ollama: {
     model: process.env.OLLAMA_MODEL || 'llama4',
     embedModel: process.env.OLLAMA_EMBED_MODEL || '',
