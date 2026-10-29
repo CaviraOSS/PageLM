@@ -8,6 +8,7 @@ import * as requesty from './requesty'
 import * as cheaperinference from './cheaperinference'
 import * as atlascloud from './atlascloud'
 import * as opper from './opper'
+import * as runcrate from './runcrate'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
 import * as litellm from './litellm'
@@ -28,6 +29,7 @@ function pick(p: string) {
     case 'cheaperinference': return cheaperinference
     case 'atlascloud': return atlascloud
     case 'opper': return opper
+    case 'runcrate': return runcrate
     case 'minimax': return minimax
     case 'litellm': return litellm
     case 'apiroute':
