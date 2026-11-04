@@ -1,3 +1,6 @@
 node_modules
 *.woff2
 .svelte-kit
+sessions.json
+notes.txt
+.env
