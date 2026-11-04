@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import db from '../../utils/database/keyv'
 
 export function flashcardRoutes(app: any) {

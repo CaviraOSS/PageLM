@@ -138,11 +138,15 @@ function parseDateHeuristic(dateStr: string): string {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     if (dateStr.toLowerCase() === 'today') {
-        return new Date(today.getTime() + 23 * 60 * 60 * 1000).toISOString()
+        const todayEnd = new Date(today)
+        todayEnd.setHours(23, 59, 59, 999)
+        return todayEnd.toISOString()
     }
 
     if (dateStr.toLowerCase() === 'tomorrow') {
-        return new Date(today.getTime() + 47 * 60 * 60 * 1000).toISOString()
+        const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        tomorrow.setHours(23, 59, 59, 999)
+        return tomorrow.toISOString()
     }
 
     if (dateStr.toLowerCase().includes('next week')) {
@@ -171,10 +175,10 @@ function parseDateHeuristic(dateStr: string): string {
     if (targetDay !== -1) {
         const currentDay = now.getDay()
         let daysToAdd = targetDay - currentDay
-        if (daysToAdd <= 0) daysToAdd += 7
+        if (daysToAdd < 0) daysToAdd += 7
 
         const targetDate = new Date(today.getTime() + daysToAdd * 24 * 60 * 60 * 1000)
-        targetDate.setHours(23, 59, 0, 0)
+        targetDate.setHours(23, 59, 59, 999)
         return targetDate.toISOString()
     }
 
@@ -183,7 +187,7 @@ function parseDateHeuristic(dateStr: string): string {
         const month = parseInt(dateMatch[1]) - 1
         const day = parseInt(dateMatch[2])
         const year = now.getFullYear()
-        const targetDate = new Date(year, month, day, 23, 59, 0, 0)
+        const targetDate = new Date(year, month, day, 23, 59, 59, 999)
 
         if (targetDate.getTime() < now.getTime()) {
             targetDate.setFullYear(year + 1)
@@ -192,7 +196,9 @@ function parseDateHeuristic(dateStr: string): string {
         return targetDate.toISOString()
     }
 
-    return new Date(today.getTime() + 47 * 60 * 60 * 1000).toISOString()
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+    tomorrow.setHours(23, 59, 59, 999)
+    return tomorrow.toISOString()
 }
 
 export async function generateSteps(task: Task): Promise<string[]> {
