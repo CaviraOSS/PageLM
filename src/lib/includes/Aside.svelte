@@ -73,8 +73,8 @@
 
 			<div class="mt-auto items-end flex flex-col gap-2">
 				{#each [{ text: "GitHub", href: "https://github.com/CaviraOSS" }, { text: "Discord", href: "https://cavira.app/discord" }, { text: "Website", href: "https://cavira.app" }] as link, i}
-					<a href={link.href} target="_blank" transition:fly={{ y: 10, duration: 400, delay: 300 + (i + 1) * 50, easing: quintOut }} class="flex flex-col h-10 group overflow-hidden py-1 hover:text-zinc-100 ml-auto cursor-pointer">
-						<div class="flex items-center gap-4 group-hover:-mt-10 duration-300 transition-all">
+					<a href={link.href} target="_blank" transition:fly={{ y: 10, duration: 400, delay: 300 + (i + 1) * 50, easing: quintOut }} class="flex flex-col h-8 group overflow-hidden py-1 hover:text-zinc-100 ml-auto cursor-pointer">
+						<div class="flex items-center gap-4 group-hover:-mt-8 duration-300 transition-all">
 							<span in:typewriter={{ delay: 350 + (i + 1) * 50 }}>{link.text}</span>
 							{@html getIcon("arrowTop", "size-5 rotate-45 mt-px")}
 						</div>
