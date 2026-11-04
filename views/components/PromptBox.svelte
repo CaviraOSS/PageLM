@@ -4,7 +4,7 @@
 	import { onMount, onDestroy, tick } from "svelte";
 	import { page } from "$app/stores";
 	import { goto } from "$app/navigation";
-	import { showAlert } from "$lib/alerts.svelte.js";
+	import { showAlert } from "$lib/handlers/alerts.svelte.js";
 	import Dropdown from "$lib/components/Dropdown.svelte";
 
 	let { cyclePrompts = false } = $props();

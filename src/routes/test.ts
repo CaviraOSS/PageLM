@@ -1,5 +1,5 @@
 export default async () => {
-	app.get('/', async (req, res) => {
+	app.get('/e', async (req, res) => {
 		res.json({ message: 'e' });
 	});
 }

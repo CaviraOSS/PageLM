@@ -1,52 +1,59 @@
 import path from 'path';
 const fs = utils.fs;
-
 export default async () => {
     app.use(async (req, res, next) => {
-        if (req.method !== "GET") return next();
+        if (req.method !== "GET")
+            return next();
         try {
-            if (req.path.startsWith('/api/')) return next();
-            if (req.path.startsWith('/assets/')) return next();
-
+            if (req.path.startsWith('/api/'))
+                return next();
+            if (req.path.startsWith('/assets/'))
+                return next();
+            const indexExists = fs.existsSync('./public/index.html');
+            if (!indexExists) {
+                res.writeHead(404, { 'Content-Type': 'text/plain' });
+                return res.end('404 Not Found: page not found');
+            }
             res.writeHead(200, { 'Content-Type': 'text/html' });
             return res.end(fs.readFileSync('./public/index.html', 'utf-8'));
-        } catch (error) {
+        }
+        catch (error) {
             console.error(error);
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.end(`500 Internal Server Error: ${error.message}`);
         }
     });
-
-    if (fs.existsSync('./build')) build();
+    if (fs.existsSync('./build'))
+        build();
     function build() {
         try {
             fs.listAllFiles('./build').forEach((file) => {
                 const destPath = file.replace('./build', './public');
-
-                if (file.includes('assets')) return;
-
+                if (file.includes('assets'))
+                    return;
                 const destDir = path.dirname(destPath);
-
-                if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-                if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
-
+                if (!fs.existsSync(destDir))
+                    fs.mkdirSync(destDir, { recursive: true });
+                if (fs.existsSync(destPath))
+                    fs.unlinkSync(destPath);
                 try {
                     fs.renameSync(file, destPath);
-                } catch (error) {
+                }
+                catch (error) {
                     fs.copyFileSync(file, destPath);
                     fs.unlinkSync(file);
                 }
             });
-
-            if (fs.existsSync('./build')) fs.rmdirSync('./build', { recursive: true });
+            if (fs.existsSync('./build'))
+                fs.rmdirSync('./build', { recursive: true });
             console.log('Processed build files.');
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error processing build files:', error);
             console.log('Failed to process build files.');
         }
     }
 };
-
 // const O_REG = new RegExp('^' + o.replace(/\*/g, '([^/]+)') + '$');
 /* app.use(async (req, res, next) => {
     if (req.method !== "GET") return next();
@@ -104,4 +111,5 @@ export default async () => {
     } catch (error) {
         console.error(error);
     }
-}); */
+}); */ 
+//# sourceMappingURL=router.js.map

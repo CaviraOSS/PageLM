@@ -23,7 +23,10 @@ Copy-Item .env.example .env
 
 Setup .env and run with:
 
+Run `npm run build` to compile the TypeScript backend, then `npm run start`.
+
 ```bash
+npm run build
 npm run start
 ```
 

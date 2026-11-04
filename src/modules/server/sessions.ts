@@ -20,7 +20,7 @@ if (!fs.existsSync(DB_DIR)) {
 
 let fsSession;
 try {
-	fsSession = JSON.parse(fs.readFileSync(DB));
+	fsSession = JSON.parse(fs.readFileSync(DB, 'utf8'));
 } catch (error) {
 	fsSession = []
 }
@@ -78,7 +78,7 @@ export default async (req, res, next) => {
 		if (sessionID && sessions.has(sessionID)) {
 			req.session = sessions.get(sessionID);
 		} else {
-			sessionID = gen(62, 64).toString('hex');
+			sessionID = gen(62, 64);
 			req.session = {
 				session: {
 					created: Date.now(),

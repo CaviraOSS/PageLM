@@ -25,19 +25,19 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import https from 'https';
-import { WebSocketServer } from 'ws';
-import sessions from './sessions.js';
+//import { WebSocketServer } from 'ws';
+import sessions from './sessions.ts';
 
 const defHeaders = {
 	'X-Powered-By': 'Winston/4.0.0',
 	'Server': 'Winston'
 };
 
-function server(options = {}) {
+function server(options: any = {}) {
 	const ROUTES = [];
 	const WARES = [];
-	const WS_ROUTES = [];
-	const wss = new WebSocketServer({ noServer: true });
+	/* const WS_ROUTES = [];
+	const wss = new WebSocketServer({ noServer: true }); */
 
 	if (options.cors && options.cors.enabled === true) {
 		defHeaders['Access-Control-Allow-Origin'] = options?.cors?.origin || '*';
@@ -240,7 +240,7 @@ function server(options = {}) {
 		? https.createServer({ key: options.ssl.key, cert: options.ssl.cert }, handleRequest)
 		: null;
 
-	const handleUpgrade = (req, socket, head) => {
+	/* const handleUpgrade = (req, socket, head) => {
 		const qIndex = req.url.indexOf('?');
 		const pathName = qIndex !== -1 ? req.url.substring(0, qIndex) : req.url;
 
@@ -262,17 +262,17 @@ function server(options = {}) {
 				wss.handleUpgrade(req, socket, head, (ws) => {
 					req.hostname = (req.headers.host || '').split(':')[0].replace(/[^\w.-]/g, '');
 					req.ip = (req.socket.remoteAddress || '').replace(/[^\w.:]/g, '');
-					ws.req = req;
+					(ws as any).req = req;
 					r.handler(ws, req);
 				});
 				break;
 			}
 		}
 		if (!matched) socket.destroy();
-	};
+	}; */
 
-	HTTP_SERVER.on('upgrade', handleUpgrade);
-	if (HTTPS_SERVER) HTTPS_SERVER.on('upgrade', handleUpgrade);
+	/* HTTP_SERVER.on('upgrade', handleUpgrade);
+	if (HTTPS_SERVER) HTTPS_SERVER.on('upgrade', handleUpgrade); */
 
 	const add = (method, routePath, handler) => {
 		const segments = routePath.split('/').filter(Boolean);
@@ -483,7 +483,7 @@ function server(options = {}) {
 		options: (a, b) => add('OPTIONS', a, b),
 		head: (a, b) => add('HEAD', a, b),
 		all: (a, b) => add('ALL', a, b),
-		ws: (a, b) => WS_ROUTES.push({ path: a, handler: b })
+		//ws: (a, b) => WS_ROUTES.push({ path: a, handler: b })
 	};
 }
 

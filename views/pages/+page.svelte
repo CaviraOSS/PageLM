@@ -6,7 +6,6 @@
 	import Footer from "$lib/includes/Footer.svelte";
 	import PromptBox from "$lib/components/PromptBox.svelte";
 	import Alerts from "$lib/components/Alerts.svelte";
-	import { showAlert } from '$lib/alerts.svelte.js';
 
 	let prompts = [
 		{

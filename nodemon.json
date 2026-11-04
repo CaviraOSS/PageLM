@@ -1,0 +1,4 @@
+{
+	"watch": ["src/**/*.ts", "src/**/*.js"],
+	"ignore": ["node_modules", "dist"]
+}

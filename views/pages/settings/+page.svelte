@@ -5,7 +5,6 @@
 	import Dropdown from "$lib/components/Dropdown.svelte";
 	import Aside from "$lib/includes/Aside.svelte";
 	import Alerts from "$lib/components/Alerts.svelte";
-	import { showAlert } from "$lib/alerts.svelte.js";
 </script>
 
 <Aside />

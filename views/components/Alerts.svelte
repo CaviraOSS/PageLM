@@ -1,7 +1,7 @@
 <script>
     import { fly, fade } from 'svelte/transition';
     import { flip } from 'svelte/animate';
-    import { alertStore } from '../alerts.svelte.js';
+    import { alertStore } from '../handlers/alerts.svelte.js';
     import { getIcon } from "$lib/icons/icons.js";
 </script>
 
@@ -14,7 +14,7 @@
             class="pointer-events-auto h-fit w-fit rounded-full border border-white/10 bg-white/5 px-5 pr-2 py-2 text-sm text-white shadow-lg backdrop-blur-lg flex items-center gap-2"
         >
             <span class="">{item.text}</span>
-            <button class="p-2 w-fit rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors" on:click={() => alertStore.remove(item.id)}>
+            <button class="p-2 w-fit rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-white/10 transition-colors" onclick={() => alertStore.remove(item.id)}>
                 {@html getIcon('x', "size-4")}
             </button>
         </div>

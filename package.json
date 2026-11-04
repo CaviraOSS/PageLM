@@ -5,28 +5,24 @@
 	"type": "module",
 	"scripts": {
 		"setup": "npm install --omit=dev",
-		"start": "node ./src/app.js",
-		"dev": "nodemon ./src/app.js & vite dev",
-		"lines": "node src/scripts/lines.js",
-		"serve": "nodemon ./src/app.js",
+		"build": "tsc",
+		"start": "node ./dist/app.js",
+		"serve": "npm run build && nodemon ./dist/app.js",
 		"views:dev": "vite dev",
 		"views:build": "vite build",
-		"views:watch": "vite build --watch",
-		"views:preview": "vite preview",
-		"views:prepare": "svelte-kit sync || echo ''",
-		"views:check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-		"views:check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch"
+		"dev": "concurrently \"nodemon ./src/app.ts\" \"vite dev\"",
+		"devx": "concurrently \"tsc --watch\" \"nodemon --watch dist ./dist/app.js\" \"vite dev\""
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.63.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"@tailwindcss/vite": "^4.3.0",
+		"@types/node": "^22.20.5",
+		"@types/ws": "^8.18.1",
+		"concurrently": "^9.1.2",
 		"svelte": "^5.56.1",
 		"tailwindcss": "^4.3.0",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.3",
 		"vite": "^8.0.16"
-	},
-	"dependencies": {
-		"ws": "^8.22.1"
 	}
 }

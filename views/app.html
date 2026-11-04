@@ -4,10 +4,11 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
+		<title>%sveltekit.env.PUBLIC_APP_NAME%</title>
+		<script src="%sveltekit.env.PUBLIC_APP_HOST%/assets/tailwind.js"></script>
+		<link rel="stylesheet" href="%sveltekit.env.PUBLIC_APP_HOST%/assets/app.css" />
+		<link rel="icon" type="image/x-icon" href="%sveltekit.env.PUBLIC_APP_HOST%/favicon.ico" />
 		%sveltekit.head%
-		<link rel="icon" href="/assets/logo.png" />
-		<link rel="stylesheet" href="/assets/app.css" />
-		<script src="/assets/tailwind.js"></script>
 	</head>
 	<body data-sveltekit-preload-data="hover" style="background-color: black;">
 		<div style="display: contents">%sveltekit.body%</div>
