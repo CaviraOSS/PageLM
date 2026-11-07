@@ -9,6 +9,7 @@ import * as cheaperinference from './cheaperinference'
 import * as atlascloud from './atlascloud'
 import * as opper from './opper'
 import * as runcrate from './runcrate'
+import * as cloudgpu from './cloudgpu'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
 import * as litellm from './litellm'
@@ -30,6 +31,7 @@ function pick(p: string) {
     case 'atlascloud': return atlascloud
     case 'opper': return opper
     case 'runcrate': return runcrate
+    case 'cloudgpu': return cloudgpu
     case 'minimax': return minimax
     case 'litellm': return litellm
     case 'apiroute':
