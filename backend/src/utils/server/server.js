@@ -112,7 +112,9 @@ function server() {
     };
     const add = (a, b, c) => { ROUTES.push({ method: a.toUpperCase(), path: b, handler: c }); };
     const use = (a) => { WARES.push(a); };
-    const listen = (a, b) => { SERVER.setTimeout(10000); SERVER.listen(a, b); };
+    // Long-running routes (PDF extraction, embeddings, generation) need more than
+    // the default socket timeout, otherwise uploads are cut off mid-processing.
+    const listen = (a, b) => { SERVER.setTimeout(300000); SERVER.listen(a, b); };
     const all = (a, b) => { add('ALL', a, b); };
     const getRoutes = () => ROUTES.reduce((acc, { method, path }) => ((acc[method] = acc[method] || []).push(path), acc), {});
     const serverStatic = (endpoint, dir) => {

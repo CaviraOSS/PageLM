@@ -2,6 +2,7 @@ import * as ollama from './ollama'
 import * as gemini from './gemini'
 import * as openai from './openai'
 import * as grok from './grok'
+import * as groq from './groq'
 import * as claude from './claude'
 import * as openrouter from './openrouter'
 import * as requesty from './requesty'
@@ -23,6 +24,7 @@ function pick(p: string) {
     case 'gemini': return gemini
     case 'openai': return openai
     case 'grok': return grok
+    case 'groq': return groq
     case 'claude': return claude
     case 'openrouter': return openrouter
     case 'requesty': return requesty

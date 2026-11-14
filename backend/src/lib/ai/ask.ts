@@ -25,9 +25,16 @@ function guessTopic(q: string): string {
 }
 
 function extractFirstJsonObject(s: string): string {
-  let depth = 0, start = -1
+  let depth = 0, start = -1, inStr = false, esc = false
   for (let i = 0; i < s.length; i++) {
     const ch = s[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (ch === "\\") esc = true
+      else if (ch === '"') inStr = false
+      continue
+    }
+    if (ch === '"') { inStr = true; continue }
     if (ch === "{") { if (depth === 0) start = i; depth++ }
     else if (ch === "}") { depth--; if (depth === 0 && start !== -1) return s.slice(start, i + 1) }
   }
@@ -36,6 +43,71 @@ function extractFirstJsonObject(s: string): string {
 
 function tryParse<T = unknown>(s: string): T | null {
   try { return JSON.parse(s) as T } catch { return null }
+}
+
+// Model output is sometimes "JSON-like" but not strict JSON: LaTeX/markdown
+// backslashes like "\(" or a trailing "\" before a newline, and raw control
+// characters inside strings. Repair those so legacy payloads still parse.
+function repairLooseJson(raw: string): string {
+  let out = "", inStr = false
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i]
+    if (!inStr) {
+      out += ch
+      if (ch === '"') inStr = true
+      continue
+    }
+    if (ch === '"') { out += ch; inStr = false; continue }
+    if (ch === "\\") {
+      const next = raw[i + 1]
+      if (next === undefined) { out += "\\\\"; continue }
+      if (next === "u") {
+        const hex = raw.slice(i + 2, i + 6)
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) { out += "\\u" + hex; i += 5 }
+        else out += "\\\\"
+        continue
+      }
+      if ('"\\/bfnrt'.includes(next)) { out += "\\" + next; i++; continue }
+      out += "\\\\"
+      continue
+    }
+    if (ch === "\n") { out += "\\n"; continue }
+    if (ch === "\r") { out += "\\r"; continue }
+    if (ch === "\t") { out += "\\t"; continue }
+    if (ch < " ") { out += "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0"); continue }
+    out += ch
+  }
+  return out
+}
+
+function parseJsonObject(s: string): any | null {
+  let t = String(s ?? "").trim()
+  t = t.replace(/^```(?:json|markdown|md)?\s*/i, "").replace(/\s*```$/i, "").trim()
+  if (!t) return null
+  if (t.startsWith("{")) {
+    const direct = tryParse<any>(repairLooseJson(t))
+    if (direct && typeof direct === "object") return direct
+  }
+  const inner = extractFirstJsonObject(t)
+  return inner ? tryParse<any>(repairLooseJson(inner)) : null
+}
+
+// Models sometimes wrap the whole {topic, answer, flashcards} payload inside the
+// answer string (often in a ```json fence). Unwrap it so clients render markdown.
+function coerceAskPayload(input: any, fallbackTopic: string, fallbackAnswer: string): AskPayload {
+  let topic = typeof input?.topic === "string" && input.topic.trim() ? input.topic.trim() : fallbackTopic
+  let answer = typeof input?.answer === "string" ? input.answer : fallbackAnswer
+  let flashcards: AskCard[] = Array.isArray(input?.flashcards) ? input.flashcards : []
+
+  for (let depth = 0; depth < 3; depth++) {
+    const inner = parseJsonObject(answer)
+    if (!inner || typeof inner.answer !== "string" || !inner.answer.trim()) break
+    if (typeof inner.topic === "string" && inner.topic.trim()) topic = inner.topic.trim()
+    if (!flashcards.length && Array.isArray(inner.flashcards)) flashcards = inner.flashcards
+    answer = inner.answer
+  }
+
+  return { topic, answer, flashcards }
 }
 
 export const BASE_SYSTEM_PROMPT = `
@@ -286,7 +358,7 @@ export async function askWithContext(opts: AskWithContextOptions): Promise<AskPa
 
   const ck = { t: opts.cacheScope || "ask_ctx", q: safeQ, ctx, topic, sys: systemPrompt, hist: historyCache }
   const cached = readCache(ck)
-  if (cached) return cached
+  if (cached) return coerceAskPayload(cached, cached?.topic || topic, cached?.answer || "")
 
   const messages: any[] = [{ role: "system", content: systemPrompt }]
   for (const msg of toConversationHistory(historyArr)) messages.push(msg)
@@ -301,14 +373,11 @@ export async function askWithContext(opts: AskWithContextOptions): Promise<AskPa
   const jsonStr = extractFirstJsonObject(draft) || draft
   const parsed = tryParse<any>(jsonStr)
 
-  const out: AskPayload =
-    parsed && typeof parsed === "object"
-      ? {
-        topic: typeof parsed.topic === "string" ? parsed.topic : topic,
-        answer: typeof parsed.answer === "string" ? parsed.answer : "",
-        flashcards: Array.isArray(parsed.flashcards) ? (parsed.flashcards as AskCard[]) : [],
-      }
-      : { topic, answer: draft, flashcards: [] }
+  const out = coerceAskPayload(
+    parsed && typeof parsed === "object" ? parsed : { answer: draft },
+    topic,
+    draft,
+  )
 
   writeCache(ck, out)
   return out
@@ -329,13 +398,14 @@ export async function handleAsk(
   const safeQ = normalizeTopic(questionRaw)
   const nsFinal = typeof ns === "string" && ns.trim() ? ns : "pagelm"
 
-  const rag = await execDirect({
+  const rag: any = await execDirect({
     agent: "researcher",
-    plan: { steps: [{ tool: "rag.search", input: { q: safeQ, ns: nsFinal, k }, timeoutMs: 8000, retries: 1 }] },
+    plan: { steps: [{ tool: "rag.search", input: { q: safeQ, ns: nsFinal, k }, timeoutMs: 25000, retries: 1 }] },
     ctx: { ns: nsFinal }
   })
 
-  const ctxDocs = Array.isArray(rag) ? (rag as Array<{ text?: string }>) : []
+  const ragDocs = Array.isArray(rag) ? rag : Array.isArray(rag?.result) ? rag.result : []
+  const ctxDocs = ragDocs as Array<{ text?: string }>
   const ctx = ctxDocs.map(d => d?.text || "").join("\n\n") || "NO_CONTEXT"
   const topic = guessTopic(safeQ) || "General"
 
