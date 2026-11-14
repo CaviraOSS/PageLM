@@ -38,7 +38,7 @@ export default function FlashCards() {
   };
 
   return (
-    <div className="min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
+    <div className="min-h-screen w-full pl-4 pr-4 md:pl-32">
       <div className="max-w-6xl mx-auto pt-6 pb-14 px-2">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

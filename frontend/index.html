@@ -6,6 +6,13 @@
     <link rel="stylesheet" href="/app.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      try {
+        var savedNav = localStorage.getItem("pagelm:nav-collapsed");
+        var navCollapsed = savedNav !== null ? savedNav === "1" : window.innerWidth < 1024;
+        if (navCollapsed) document.documentElement.classList.add("nav-collapsed");
+      } catch (e) { }
+    </script>
   <title>PageLM</title>
   </head>
   <body>

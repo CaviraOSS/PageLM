@@ -14,32 +14,47 @@ interface ChatsResponse {
 export default function Sidebar() {
   const p = useLocation().pathname
   const [isToggled, setIsToggled] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pagelm:nav-collapsed')
+      if (saved !== null) return saved === '1'
+    } catch { }
+    return typeof window !== 'undefined' && window.innerWidth < 1024
+  })
   const [chats, setChats] = useState<ChatsResponse | null>(null);
 
-  // Fetch chats only when the drawer is opened to avoid redundant requests on mount
+  useEffect(() => {
+    try { localStorage.setItem('pagelm:nav-collapsed', isCollapsed ? '1' : '0') } catch { }
+    document.documentElement.classList.toggle('nav-collapsed', isCollapsed)
+  }, [isCollapsed]);
+
   useEffect(() => {
     if (isToggled) {
       getChats().then(data => setChats(data));
     }
   }, [isToggled]);
 
-  // Dismiss drawer on Escape key press
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isToggled) {
-        setIsToggled(false);
-      }
+      if (e.key === 'Escape' && isToggled) setIsToggled(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isToggled]);
 
-  const b = (t: string) => `p-2 rounded-xl duration-300 transition-all ${p === t ? 'text-white bg-stone-800' : 'hover:bg-stone-900 hover:text-stone-200'}`
-  const chatButtonClass = `p-2 rounded-xl duration-300 transition-all ${isToggled ? 'text-white bg-stone-800' : 'hover:bg-stone-900 hover:text-stone-200'}`
+  const isChat = p === '/' || p === '/chat' || p.startsWith('/chat/');
+  const isSources = p === '/sources' || p.startsWith('/sources/');
+  const isStudio = p === '/studio' || p.startsWith('/studio/');
+  const cls = (active: boolean) => `relative p-2.5 rounded-2xl duration-300 transition-all ${active ? 'text-white bg-stone-800 shadow-inner shadow-black/40' : 'text-stone-400 hover:bg-stone-900 hover:text-stone-200'}`;
+  const chatButtonClass = `p-2.5 rounded-2xl duration-300 transition-all ${isToggled ? 'text-white bg-stone-800' : 'text-stone-400 hover:bg-stone-900 hover:text-stone-200'}`;
+
+  const collapseNav = () => {
+    setIsToggled(false);
+    setIsCollapsed(true);
+  };
 
   return (
     <>
-      {/* Click-outside backdrop to prevent permanent chat obstruction */}
       {isToggled && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 transition-opacity"
@@ -48,14 +63,27 @@ export default function Sidebar() {
         />
       )}
 
-      <aside className='left-0 bottom-0 w-screen md:w-fit md:h-screen fixed p-4 z-50 lg:flex'>
+      {isCollapsed && (
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(false)}
+          className="hidden md:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 h-16 w-8 items-center justify-center rounded-r-2xl border border-l-0 border-stone-800 bg-stone-950/95 text-stone-300 shadow-xl shadow-black/40 transition-colors hover:bg-stone-900 hover:text-white"
+          title="إظهار القائمة"
+          aria-label="إظهار القائمة"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      )}
+
+      <aside className={`left-0 bottom-0 w-screen md:w-fit md:h-screen fixed p-4 z-50 lg:flex transition-transform duration-300 ease-out ${isCollapsed ? 'md:-translate-x-full' : ''}`}>
         <div
           id='idk'
           className={`w-72 md:order-2 h-full z-40 rounded-l-none rounded-2xl bg-stone-950 border border-l-transparent border-stone-900 ${
             isToggled ? 'flex' : 'hidden'
           } flex-col p-4 space-y-3 overflow-y-auto custom-scroll shadow-2xl transition-all duration-200`}
         >
-          {/* Drawer header with explicit close toggle */}
           <div className="flex items-center justify-between pb-3 border-b border-stone-800">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-stone-200 tracking-wide uppercase">Chat History</span>
@@ -77,25 +105,37 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {/* List of chats, closing drawer upon navigation */}
-<div className="flex-1 overflow-y-auto space-y-1">
-  {chats === null ? (
-    <p className="text-xs text-stone-500 text-center py-6">Loading…</p>
-  ) : chats.chats.length ? (
-    chats.chats.map((chat) => (
-      <Link
-        key={chat.id}
-        to={`/chat/?chatId=${chat.id}`}
-        onClick={() => setIsToggled(false)}
-        className="p-2.5 hover:text-stone-100 hover:bg-stone-900/90 rounded-xl block text-sm truncate border border-transparent hover:border-stone-800 transition-colors"
-      >
-        {chat.title || "Untitled Chat"}
-      </Link>
-    ))
-  ) : (
-    <p className="text-xs text-stone-500 text-center py-6">No previous chats</p>
-  )}
-</div>
+          <div className="flex-1 overflow-y-auto space-y-1">
+            {chats === null ? (
+              <p className="text-xs text-stone-500 text-center py-6">Loading…</p>
+            ) : chats.chats.length ? (
+              chats.chats.map((chat) => (
+                <Link
+                  key={chat.id}
+                  to={`/chat/?chatId=${chat.id}`}
+                  onClick={() => setIsToggled(false)}
+                  className="p-2.5 hover:text-stone-100 hover:bg-stone-900/90 rounded-xl block text-sm truncate border border-transparent hover:border-stone-800 transition-colors"
+                >
+                  {chat.title || "Untitled Chat"}
+                </Link>
+              ))
+            ) : (
+              <p className="text-xs text-stone-500 text-center py-6">No previous chats</p>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-stone-800">
+            <Link
+              to="/sources"
+              onClick={() => setIsToggled(false)}
+              className="flex items-center gap-2 text-xs text-stone-400 hover:text-stone-200 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+              </svg>
+              إدارة المصادر
+            </Link>
+          </div>
         </div>
 
         <div
@@ -104,54 +144,60 @@ export default function Sidebar() {
             isToggled ? 'md:rounded-r-none' : ''
           } bg-stone-950/50 backdrop-blur-xl border border-stone-900 text-stone-400 flex flex-col items-center justify-between py-4 z-40`}
         >
-          <img src='/logo.png' alt='logo' className='w-10 h-auto rounded-full hidden md:block' />
-        <nav className='flex md:flex-col items-center space-x-4 md:space-x-0 md:space-y-2 my-auto'>
-          <Link to='/' className={b('/')}>
-            <svg className="size-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.29367 4.96556C3.62685 6.90311 2.29344 7.87189 1.76974 9.30291C1.72773 9.41771 1.68994 9.534 1.65645 9.65157C1.23901 11.1171 1.74832 12.6846 2.76696 15.8197C3.78559 18.9547 4.2949 20.5222 5.49405 21.4625C5.59025 21.5379 5.68918 21.6098 5.79064 21.678C7.05546 22.5279 8.70364 22.5279 12 22.5279C15.2964 22.5279 16.9446 22.5279 18.2094 21.678C18.3108 21.6098 18.4098 21.5379 18.506 21.4625C19.7051 20.5222 20.2144 18.9547 21.2331 15.8197C22.2517 12.6846 22.761 11.1171 22.3436 9.65157C22.3101 9.534 22.2723 9.41771 22.2303 9.30291C21.7066 7.87189 20.3732 6.90312 17.7064 4.96557C15.0395 3.02801 13.7061 2.05923 12.1833 2.00336C12.0611 1.99888 11.9389 1.99888 11.8167 2.00336C10.2939 2.05923 8.96048 3.02801 6.29367 4.96556ZM10 17.0697C9.58579 17.0697 9.25 17.4054 9.25 17.8197C9.25 18.2339 9.58579 18.5697 10 18.5697H14C14.4142 18.5697 14.75 18.2339 14.75 17.8197C14.75 17.4054 14.4142 17.0697 14 17.0697H10Z" fill="currentColor" /></svg>
+          <Link to="/" className="hidden md:block" aria-label="PageLM">
+            <img src='/logo.png' alt='logo' className='w-10 h-auto rounded-full' />
           </Link>
-          <button
-            onClick={() => setIsToggled(prev => !prev)}
-            className={chatButtonClass}
-            aria-label="Toggle chat history"
-            title="Toggle chat history"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.25C6.06294 1.25 1.25 6.06294 1.25 12C1.25 17.9371 6.06294 22.75 12 22.75C17.9371 22.75 22.75 17.9371 22.75 12C22.75 6.06294 17.9371 1.25 12 1.25ZM12.75 8C12.75 7.58579 12.4142 7.25 12 7.25C11.5858 7.25 11.25 7.58579 11.25 8L11.25 11.5C11.25 12.7426 12.2574 13.75 13.5 13.75H15C15.4142 13.75 15.75 13.4142 15.75 13C15.75 12.5858 15.4142 12.25 15 12.25H13.5C13.0858 12.25 12.75 11.9142 12.75 11.5L12.75 8Z" fill="currentColor" /></svg>
-          </button>
-          <Link to='/tools' className={b('/tools')}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.99999 11.0781V13.6264C4.99999 15.4877 4.99999 16.4184 5.24471 17.1715C5.7393 18.6937 6.93272 19.8871 8.45491 20.3817C9.20807 20.6264 10.1387 20.6264 12 20.6264C13.8613 20.6264 14.7919 20.6264 15.5451 20.3817C17.0673 19.8871 18.2607 18.6937 18.7553 17.1715C19 16.4184 19 15.4877 19 13.6264V11.0813M19 11.0813C18.0427 11.4693 16.8601 11.8907 15.4529 12.3933L13.3455 13.146C12.6795 13.3838 12.3465 13.5028 12.0001 13.5028C11.6537 13.5028 11.3207 13.3838 10.6547 13.146L8.54734 12.3933C4.14668 10.8217 1.94635 10.0358 1.94635 8.62638C1.94635 7.21695 4.14668 6.4311 8.54734 4.85942L10.6547 4.10677C11.3207 3.86892 11.6537 3.75 12.0001 3.75C12.3465 3.75 12.6795 3.86892 13.3455 4.10677L15.4529 4.85942C19.8535 6.4311 22.0539 7.21695 22.0539 8.62638C22.0539 9.58509 21.0361 10.2561 19 11.0813Z" stroke="currentColor" stroke-width="1.5" />
-              <path d="M10.5005 3.36538L8.23248 4.17545C6.08494 4.94242 4.39712 5.54521 3.25195 6.13759C2.14511 6.71014 1.19629 7.44609 1.19629 8.62638V15.6381C1.19629 16.0523 1.58572 16.3764 1.99993 16.3764C2.41415 16.3764 2.74993 16.0406 2.74993 15.6264V10.8351C2.46167 10.6602 2.19506 10.4693 1.96701 10.2565C1.50122 9.82179 1.19629 9.29549 1.19629 8.62638C1.19629 8.21216 1.58572 7.87638 1.99993 7.87638C2.07344 7.87638 2.14279 7.88695 2.20714 7.90666L2 7.99988L2.15664 8.62643H2.69635C2.69635 8.85558 2.84769 9.21727 3.94119 9.78292C4.98525 10.323 6.57627 10.893 8.7996 11.6871L10.907 12.4397C11.622 12.6951 11.8136 12.7528 12.0001 12.7528C12.1866 12.7528 12.3782 12.6951 13.0932 12.4397L15.271 11.6619C16.6524 11.1686 17.7947 10.7606 18.7183 10.3863C19.7289 9.97669 20.4109 9.63369 20.8337 9.30907C21.2397 8.99736 21.3039 8.78585 21.3039 8.62643H22.8038C22.8038 8.62642 22.8038 8.62645 22.8038 8.62643C22.8038 7.44614 21.855 6.71014 20.7481 6.13759C19.603 5.54521 17.9151 4.94242 15.7676 4.17544L13.4996 3.36539C12.9298 3.16135 12.4793 3 12 3C11.5208 3 11.0703 3.16135 10.5005 3.36538Z" fill="currentColor" />
-              <path d="M22.8006 8.74459C22.7698 9.29407 22.5251 9.74782 22.1636 10.1277C22.5292 9.74561 22.7703 9.29483 22.8006 8.74459Z" fill="currentColor" />
-            </svg>
-          </Link>
-          <Link to='/exam' className={b('/exam')}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-              <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
-            </svg>
-          </Link>
-          <Link to='/quiz' className={b('/quiz')}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-              <path d="M12 .75a8.25 8.25 0 0 0-4.135 15.39c.686.398 1.115 1.008 1.134 1.623a.75.75 0 0 0 .577.706c.352.083.71.148 1.074.195.323.041.6-.218.6-.544v-4.661a6.714 6.714 0 0 1-.937-.171.75.75 0 1 1 .374-1.453 5.261 5.261 0 0 0 2.626 0 .75.75 0 1 1 .374 1.452 6.712 6.712 0 0 1-.937.172v4.66c0 .327.277.586.6.545.364-.047.722-.112 1.074-.195a.75.75 0 0 0 .577-.706c.02-.615.448-1.225 1.134-1.623A8.25 8.25 0 0 0 12 .75Z" />
-              <path fillRule="evenodd" d="M9.013 19.9a.75.75 0 0 1 .877-.597 11.319 11.319 0 0 0 4.22 0 .75.75 0 1 1 .28 1.473 12.819 12.819 0 0 1-4.78 0 .75.75 0 0 1-.597-.876ZM9.754 22.344a.75.75 0 0 1 .824-.668 13.682 13.682 0 0 0 2.844 0 .75.75 0 1 1 .156 1.492 15.156 15.156 0 0 1-3.156 0 .75.75 0 0 1-.668-.824Z" clipRule="evenodd" />
-            </svg>
-          </Link>
-          <Link to='/planner' className={b('/planner')}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0 1 12 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 0 1 7.5 5.455V5.25Zm7.5 0v.09a49.488 49.488 0 0 0-6 0v-.09a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5Zm-3 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clipRule="evenodd" fill="currentColor" />
-              <path d="M3 18.4v-2.796a4.3 4.3 0 0 0 .713.31A26.226 26.226 0 0 0 12 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 0 1-6.477-.427C4.047 21.128 3 19.852 3 18.4Z" fill="currentColor" />
-            </svg>
-          </Link>
-          <Link to='/debate' className={b('/debate')}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-              <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0 1 12 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 0 1-3.476.383.39.39 0 0 0-.297.17l-2.755 4.133a.75.75 0 0 1-1.248 0l-2.755-4.133a.39.39 0 0 0-.297-.17 48.9 48.9 0 0 1-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97ZM6.75 8.25a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H7.5Z" clipRule="evenodd" />
-            </svg>
-          </Link>
-          <Link to='/cards' className={b('/cards')}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.24472 6.45492C5 7.20808 5 8.13872 5 10V17.3874C5 19.3045 5 20.2631 5.34196 20.77C5.75971 21.3893 6.48778 21.7242 7.22986 21.6383C7.8373 21.568 8.56509 20.9442 10.0207 19.6966C10.6614 19.1474 10.9818 18.8728 11.3337 18.7484C11.7648 18.5961 12.2352 18.5961 12.6663 18.7484C13.0182 18.8728 13.3386 19.1474 13.9793 19.6965C15.4349 20.9442 16.1627 21.568 16.7701 21.6383C17.5122 21.7242 18.2403 21.3893 18.658 20.77C19 20.2631 19 19.3045 19 17.3874V10C19 8.13872 19 7.20808 18.7553 6.45492C18.2607 4.93273 17.0673 3.73931 15.5451 3.24472C14.7919 3 13.8613 3 12 3C10.1387 3 9.20808 3 8.45492 3.24472C6.93273 3.73931 5.73931 4.93273 5.24472 6.45492ZM12 5.25C11.5858 5.25 11.25 5.58579 11.25 6C11.25 6.41421 11.5858 6.75 12 6.75C13.7949 6.75 15.25 8.20507 15.25 10C15.25 10.4142 15.5858 10.75 16 10.75C16.4142 10.75 16.75 10.4142 16.75 10C16.75 7.37665 14.6234 5.25 12 5.25Z" fill="currentColor" /></svg>
-          </Link>
-        </nav>
-      </div>
-    </aside>
-  </>
+
+          <nav className='flex md:flex-col items-center gap-3 md:gap-3 my-auto'>
+            <Link to='/sources' className={cls(isSources)} title="المصادر" aria-label="المصادر">
+              <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+              </svg>
+              <span className="sr-only">المصادر</span>
+            </Link>
+
+            <Link to='/' className={cls(isChat)} title="المحادثة" aria-label="المحادثة">
+              <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3.75h6.75M21 12c0 4.556-4.03 8.25-9 8.25a9.76 9.76 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              </svg>
+              <span className="sr-only">المحادثة</span>
+            </Link>
+
+            <Link to='/studio' className={cls(isStudio)} title="الاستوديو" aria-label="الاستوديو">
+              <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+              </svg>
+              <span className="sr-only">الاستوديو</span>
+            </Link>
+          </nav>
+
+          <div className="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={collapseNav}
+              className={`hidden md:inline-flex ${chatButtonClass}`}
+              aria-label="إخفاء القائمة"
+              title="إخفاء القائمة"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsToggled(prev => !prev)}
+              className={chatButtonClass}
+              aria-label="Toggle chat history"
+              title="سجل المحادثات"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

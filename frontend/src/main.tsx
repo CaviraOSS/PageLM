@@ -10,6 +10,8 @@ import ExamLabs from "./pages/examlab.tsx";
 import NotFound from './pages/404.tsx'
 import PlannerPage from './pages/Planner'
 import Debate from './pages/Debate'
+import Sources from './pages/Sources'
+import Studio from './pages/Studio'
 import "./index.css"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -18,6 +20,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Route path="/" element={<App />}>
         <Route path="*" element={<NotFound />} />
         <Route index element={<Landing />} />
+        <Route path="sources" element={<Sources />} />
+        <Route path="studio" element={<Studio />} />
         <Route path="chat" element={<Chat />} />
         <Route path="quiz" element={<Quiz />} />
         <Route path="tools" element={<Tools />} />

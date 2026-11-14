@@ -337,7 +337,7 @@ export default function Debate() {
 
     if (!debateId) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen w-full px-4 lg:pl-28 lg:pr-4 bg-black">
+            <div className="flex flex-col items-center justify-center min-h-screen w-full pl-4 pr-4 md:pl-32 bg-black">
                 <div className="max-w-2xl w-full space-y-8">
                     <div className="text-center space-y-4">
                         <h1 className="text-4xl lg:text-5xl font-bold text-white">
@@ -413,7 +413,7 @@ export default function Debate() {
     }
 
     return (
-        <div className="flex flex-col h-screen w-full lg:pl-28 bg-black">
+        <div className="flex flex-col h-screen w-full md:pl-32 bg-black">
             <div className="flex-shrink-0 border-b border-zinc-900 bg-stone-950/90 backdrop-blur-sm">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
