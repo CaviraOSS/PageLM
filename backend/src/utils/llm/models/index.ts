@@ -10,6 +10,7 @@ import * as cheaperinference from './cheaperinference'
 import * as atlascloud from './atlascloud'
 import * as opper from './opper'
 import * as runcrate from './runcrate'
+import * as uberllm from './uberllm'
 import * as minimax from './minimax'
 import * as apiroute from './apiroute'
 import * as litellm from './litellm'
@@ -32,6 +33,7 @@ function pick(p: string) {
     case 'atlascloud': return atlascloud
     case 'opper': return opper
     case 'runcrate': return runcrate
+    case 'uberllm': return uberllm
     case 'minimax': return minimax
     case 'litellm': return litellm
     case 'apiroute':
