@@ -6,6 +6,7 @@ import {
   addMsg,
   listChats,
   getMsgs,
+  setChatSource,
 } from "../../utils/chat/chat";
 import { emitToAll } from "../../utils/chat/ws";
 
@@ -44,26 +45,34 @@ export function chatRoutes(app: any) {
 
       let q = "";
       let chatId: string | undefined;
+      let sourceId: string | undefined;
       let files: UpFile[] = [];
 
       if (isMp) {
         const tMp = Date.now();
-        const { q: mq, chatId: mcid, files: mf } = await parseMultipart(req);
+        const { q: mq, chatId: mcid, sourceId: msid, files: mf } = await parseMultipart(req);
         q = mq;
         chatId = mcid;
+        sourceId = msid;
         files = mf || [];
         if (!q)
           return res.status(400).send({ error: "q required for file uploads" });
       } else {
         q = req.body?.q || "";
         chatId = req.body?.chatId;
+        sourceId = req.body?.sourceId;
         if (!q) return res.status(400).send({ error: "q required" });
       }
 
       let chat = chatId ? await getChat(chatId) : undefined;
-      if (!chat) chat = await mkChat(q);
+      if (!chat) chat = await mkChat(q, sourceId);
       const id = chat.id;
-      const ns = `chat:${id}`;
+      if (sourceId && (chat as any)?.sourceId !== sourceId) {
+        await setChatSource(id, sourceId);
+        (chat as any).sourceId = sourceId;
+      }
+      const activeSourceId = sourceId || (chat as any)?.sourceId;
+      const ns = activeSourceId ? `source_${activeSourceId}` : `chat:${id}`;
 
       res
         .status(202)
