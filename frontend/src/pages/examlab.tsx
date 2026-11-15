@@ -134,7 +134,7 @@ export default function ExamLabs() {
   // --- UI: Exam List ---
   if (!activeExam) {
     return (
-  <div className="min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
+  <div className="min-h-screen w-full pl-4 pr-4 md:pl-32">
     <div className="max-w-5xl mx-auto pt-10 pb-14">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -200,7 +200,7 @@ export default function ExamLabs() {
 
   // --- UI: Exam Taking ---
   return (
-    <div className="flex flex-col min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
+    <div className="flex flex-col min-h-screen w-full pl-4 pr-4 md:pl-32">
       <div className="w-full max-w-4xl mx-auto p-4 pt-8 pb-24 my-auto">
         {connecting && (
           <div className="mt-10">
@@ -216,6 +216,7 @@ export default function ExamLabs() {
               selected={selected}
               showExp={showExp}
               showHint={showHint}
+              examMode={true}
               onSelect={onSelect}
               onHint={() => setShowHint(true)}
               onNext={onNext}

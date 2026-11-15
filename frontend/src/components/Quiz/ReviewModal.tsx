@@ -30,11 +30,11 @@ export default function ReviewModal({ answers, onClose }:{ answers:UA[]; onClose
                   )}
                   <div className="flex-1">
                     <h3 className="text-white font-medium mb-2">Question {i + 1}</h3>
-                    <p className="text-stone-300 text-sm mb-3">{a.question}</p>
+                    <p className="text-stone-300 text-sm mb-3" dir="auto">{a.question}</p>
                     <div className="space-y-1 text-sm">
-                      <p className={ok ? "text-green-400" : "text-red-400"}>Your answer: {a.selectedOption}</p>
-                      {!ok && <p className="text-green-400">Correct answer: {a.correctOption}</p>}
-                      {a.explanation && <p className="text-stone-400">Explanation: {a.explanation}</p>}
+                      <p className={ok ? "text-green-400" : "text-red-400"} dir="auto">Your answer: {a.selectedOption}</p>
+                      {!ok && <p className="text-green-400" dir="auto">Correct answer: {a.correctOption}</p>}
+                      {a.explanation && <p className="text-stone-400" dir="auto">Explanation: {a.explanation}</p>}
                     </div>
                   </div>
                 </div>
