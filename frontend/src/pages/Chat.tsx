@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { env } from "../config/env";
-import { chatJSON, getChatDetail, type FlashCard, createFlashcard, listFlashcards, deleteFlashcard, getChats, type ChatMessage, type SavedFlashcard, podcastStart } from "../lib/api";
+import { chatJSON, getChatDetail, getSource, type FlashCard, createFlashcard, listFlashcards, deleteFlashcard, getChats, type ChatMessage, type SavedFlashcard, podcastStart } from "../lib/api";
 import MarkdownView from "../components/Chat/MarkdownView";
 import ActionRow from "../components/Chat/ActionRow";
 import FlashCards from "../components/Chat/FlashCards";
@@ -15,31 +15,94 @@ import { useCompanion } from "../components/Companion/CompanionProvider";
 type BagItem = { id: string; kind: "flashcard" | "note"; title: string; content: string };
 
 function extractFirstJsonObject(s: string): string {
-  let depth = 0, start = -1;
+  let depth = 0, start = -1, inStr = false, esc = false;
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
     if (ch === "{") { if (depth === 0) start = i; depth++; }
     else if (ch === "}") { depth--; if (depth === 0 && start !== -1) return s.slice(start, i + 1); }
   }
   return "";
 }
 
+// Model output is sometimes "JSON-like" but not strict JSON: LaTeX/markdown
+// backslashes like "\(" or a trailing "\" before a newline, and raw control
+// characters inside strings. Repair those so legacy payloads still parse.
+function repairLooseJson(raw: string): string {
+  let out = "", inStr = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (!inStr) {
+      out += ch;
+      if (ch === '"') inStr = true;
+      continue;
+    }
+    if (ch === '"') { out += ch; inStr = false; continue; }
+    if (ch === "\\") {
+      const next = raw[i + 1];
+      if (next === undefined) { out += "\\\\"; continue; }
+      if (next === "u") {
+        const hex = raw.slice(i + 2, i + 6);
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) { out += "\\u" + hex; i += 5; }
+        else out += "\\\\";
+        continue;
+      }
+      if ('"\\/bfnrt'.includes(next)) { out += "\\" + next; i++; continue; }
+      out += "\\\\";
+      continue;
+    }
+    if (ch === "\n") { out += "\\n"; continue; }
+    if (ch === "\r") { out += "\\r"; continue; }
+    if (ch === "\t") { out += "\\t"; continue; }
+    if (ch < " ") { out += "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0"); continue; }
+    out += ch;
+  }
+  return out;
+}
+
+function parsePayloadObject(s: string): any | null {
+  let t = s.trim();
+  t = t.replace(/^```(?:json|markdown|md)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  if (!t) return null;
+  if (t.startsWith("{")) {
+    try { return JSON.parse(repairLooseJson(t)); } catch { }
+  }
+  const inner = extractFirstJsonObject(t);
+  if (inner) {
+    try { return JSON.parse(repairLooseJson(inner)); } catch { }
+  }
+  return null;
+}
+
+function unwrapPayload(payload: any): { md: string; flashcards: FlashCard[]; topic?: string } {
+  let md = typeof payload?.answer === "string" ? payload.answer : "";
+  let flashcards: FlashCard[] = Array.isArray(payload?.flashcards) ? payload.flashcards : [];
+  let topic = typeof payload?.topic === "string" ? payload.topic : undefined;
+
+  for (let depth = 0; depth < 3; depth++) {
+    const inner = parsePayloadObject(md);
+    if (!inner || typeof inner.answer !== "string" || !inner.answer.trim()) break;
+    md = inner.answer;
+    if (!flashcards.length && Array.isArray(inner.flashcards)) flashcards = inner.flashcards;
+    if (typeof inner.topic === "string" && inner.topic.trim()) topic = inner.topic;
+  }
+
+  return { md, flashcards, topic };
+}
+
 function normalizePayload(payload: unknown): { md: string; flashcards: FlashCard[]; topic?: string } {
   if (typeof payload === "string") {
-    const s = payload.trim();
-    if (s.startsWith("{") && s.endsWith("}")) {
-      try { const obj = JSON.parse(s); return { md: String(obj?.answer || ""), flashcards: Array.isArray(obj?.flashcards) ? obj.flashcards : [], topic: typeof obj?.topic === "string" ? obj.topic : undefined }; } catch { }
-    }
-    const inner = extractFirstJsonObject(s);
-    if (inner) {
-      try { const obj = JSON.parse(inner); return { md: String(obj?.answer || ""), flashcards: Array.isArray(obj?.flashcards) ? obj.flashcards : [], topic: typeof obj?.topic === "string" ? obj.topic : undefined }; } catch { }
-    }
-    return { md: s, flashcards: [] };
+    const obj = parsePayloadObject(payload);
+    if (obj && (typeof obj.answer === "string" || Array.isArray(obj.flashcards))) return unwrapPayload(obj);
+    return { md: payload.trim(), flashcards: [] };
   }
-  if (payload && typeof payload === "object") {
-    const o = payload as any;
-    return { md: String(o?.answer || o?.html || ""), flashcards: Array.isArray(o?.flashcards) ? o.flashcards : [], topic: typeof o?.topic === "string" ? o.topic : undefined };
-  }
+  if (payload && typeof payload === "object") return unwrapPayload(payload);
   return { md: "", flashcards: [] };
 }
 
@@ -55,14 +118,18 @@ export default function Chat() {
   const state = (location?.state || {}) as {
     chatId?: string;
     q?: string;
+    sourceId?: string;
     answer?: string | { html?: string; answer?: string; flashcards?: FlashCard[]; topic?: string };
     flashcards?: FlashCard[];
   };
 
   const initialChatId = search.get("chatId") || state.chatId || "";
   const initialQuestion = search.get("q") || state.q || "";
+  const initialSourceId = search.get("sourceId") || state.sourceId || "";
 
   const [chatId, setChatId] = useState(initialChatId);
+  const [sourceId, setSourceId] = useState(initialSourceId);
+  const [sourceName, setSourceName] = useState("");
   const [messages, setMessages] = useState<ChatMessage[] | undefined>([]);
   const [cards, setCards] = useState<FlashCard[]>([]);
   const [bagOpen, setBagOpen] = useState(false);
@@ -83,7 +150,7 @@ export default function Chat() {
     `${kind}:${title.trim().toLowerCase()}|${content.trim().toLowerCase()}`;
 
   useEffect(() => {
-    if (!initialChatId && !initialQuestion) {
+    if (!initialChatId && !initialQuestion && !initialSourceId) {
       (async () => {
         try {
           setConnecting(true);
@@ -105,7 +172,35 @@ export default function Chat() {
         }
       })();
     }
-  }, [initialChatId, initialQuestion, navigate]);
+  }, [initialChatId, initialQuestion, initialSourceId, navigate]);
+
+  useEffect(() => {
+    if (!sourceId) { setSourceName(""); return; }
+    let alive = true;
+    getSource(sourceId)
+      .then((r) => { if (alive) setSourceName(r.source?.name || ""); })
+      .catch(() => { if (alive) setSourceName(""); });
+    return () => { alive = false; };
+  }, [sourceId]);
+
+  const bootRef = useRef(false);
+  useEffect(() => {
+    if (!initialSourceId || !initialQuestion || initialChatId || bootRef.current) return;
+    bootRef.current = true;
+    (async () => {
+      try {
+        setConnecting(true);
+        const r = await chatJSON({ q: initialQuestion, sourceId: initialSourceId });
+        if (r?.chatId) {
+          setChatId(r.chatId);
+          navigate(`/chat?chatId=${encodeURIComponent(r.chatId)}&sourceId=${encodeURIComponent(initialSourceId)}`, { replace: true });
+        }
+      } catch {
+        setConnecting(false);
+        setAwaitingAnswer(false);
+      }
+    })();
+  }, [initialSourceId, initialQuestion, initialChatId, navigate]);
 
   useEffect(() => {
     const cid = search.get("chatId") || state.chatId || "";
@@ -132,6 +227,8 @@ export default function Chat() {
     getChatDetail(chatId)
       .then((res) => {
         if (res?.ok && Array.isArray(res.messages)) {
+          const chatSource = (res.chat as any)?.sourceId;
+          if (chatSource) setSourceId((cur) => cur || chatSource);
           const normalized = res.messages.map((m) =>
             m.role === "assistant" ? { ...m, content: normalizePayload((m as any).content).md } : m
           );
@@ -257,8 +354,13 @@ export default function Chat() {
     setAwaitingAnswer(true);
     setBusy(true);
     try {
-      const r = await chatJSON({ q: text, chatId: chatId || undefined });
-      if (r?.chatId && r.chatId !== chatId) setChatId(r.chatId);
+      const r = await chatJSON({ q: text, chatId: chatId || undefined, sourceId: sourceId || undefined });
+      if (r?.chatId && r.chatId !== chatId) {
+        setChatId(r.chatId);
+        const params = new URLSearchParams({ chatId: r.chatId });
+        if (sourceId) params.set("sourceId", sourceId);
+        navigate(`/chat?${params.toString()}`, { replace: true, state: { chatId: r.chatId, sourceId } });
+      }
     } finally {
       setBusy(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 0);
@@ -294,7 +396,7 @@ export default function Chat() {
   const list = Array.isArray(messages) ? messages : [];
 
   return (
-    <div className="flex flex-col min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
+    <div className="flex flex-col min-h-screen w-full pl-4 pr-4 md:pl-32">
       {!showTopics && (
         <button
           onClick={() => setShowTopics(true)}
@@ -317,6 +419,30 @@ export default function Chat() {
       >
         <div className="flex-1 min-w-0 pr-0 lg:pr-2">
           <div className="w-full max-w-4xl mx-auto p-2 sm:p-4 pt-2 pb-28">
+            {sourceId && (
+              <div className="mb-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-sky-500/20 bg-gradient-to-r from-sky-500/10 via-sky-500/5 to-violet-500/5 px-4 py-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="size-9 shrink-0 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-300 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="size-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5A3.375 3.375 0 0 0 10.125 2.25h-3.5A2.25 2.25 0 0 0 4.375 4.5v15A2.25 2.25 0 0 0 6.625 21.75h10.75a2.25 2.25 0 0 0 2.25-2.25v-3.375" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 12h7.5M8.25 15.75h4.5" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-wider text-sky-300/80">محادثة مرتبطة بمصدر</div>
+                    <div className="text-sm text-stone-200 truncate" dir="auto">{sourceName || "المصدر المحدد"}</div>
+                  </div>
+                </div>
+                <div className="sm:ms-auto flex items-center gap-2 shrink-0">
+                  <Link to={`/studio?sourceId=${encodeURIComponent(sourceId)}`} className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200 hover:bg-violet-500/20 transition-colors">
+                    حوّله إلى مواد
+                  </Link>
+                  <Link to="/sources" className="rounded-lg border border-stone-800 bg-stone-900/70 px-3 py-1.5 text-xs text-stone-300 hover:bg-stone-800 transition-colors">
+                    تغيير المصدر
+                  </Link>
+                </div>
+              </div>
+            )}
             <div className="space-y-6">
               {list.map((m, i) => {
                 const userBubble = "inline-block max-w-[85%] bg-stone-900/70 border border-zinc-800 rounded-2xl px-4 py-3";
@@ -353,6 +479,10 @@ export default function Chat() {
                 onSummarize={() => sendFollowup("Summarize the previous answer into 5–7 concise bullet points with bolded keywords.")}
                 onLearnMore={() => sendFollowup("Go deeper into this topic with advanced details, real-world examples, and a short analogy.")}
                 onStartQuiz={() => {
+                  if (sourceId) {
+                    navigate(`/studio?sourceId=${encodeURIComponent(sourceId)}`);
+                    return;
+                  }
                   const t = topic || deriveTopicFromMarkdown(latestAssistantContent) || "General";
                   navigate(`/quiz?topic=${encodeURIComponent(t)}`, { state: { topic: t } });
                 }}

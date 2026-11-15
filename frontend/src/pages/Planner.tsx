@@ -3,7 +3,7 @@ import Planner from "../components/planner/Planner"
 
 export default function PlannerPage() {
     return (
-        <div className="min-h-screen w-full lg:pl-28">
+        <div className="min-h-screen w-full md:pl-32">
             <main className="py-2">
                 <div className="mx-auto max-w-6xl">
                     <header className="flex items-center justify-between pt-4 z-10 relative mb-6">

@@ -2,14 +2,94 @@ import { env } from "../config/env";
 
 export type ChatStartResponse = { ok: true; chatId: string; stream: string };
 export type ChatMessage = { role: "user" | "assistant"; content: string; at: number };
-export type ChatInfo = { id: string; title?: string; createdAt?: number };
+export type ChatInfo = { id: string; title?: string; createdAt?: number; sourceId?: string };
 export type ChatsList = { ok: true; chats: ChatInfo[] };
 export type ChatDetail = { ok: true; chat: ChatInfo; messages: ChatMessage[] };
-export type ChatJSONBody = { q: string; chatId?: string };
+export type ChatJSONBody = { q: string; chatId?: string; sourceId?: string };
 export type ChatPhase = "upload_start" | "upload_done" | "generating";
 export type FlashCard = { q: string; a: string; tags?: string[] };
+export type SourceItem = {
+  id: string;
+  name: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  chars: number;
+  createdAt: number;
+  filePath?: string;
+  textPath?: string;
+  preview: string;
+};
+export type StudioKind = "quiz" | "qcm" | "flashcards" | "summary" | "mindmap" | "learning";
+export type QuizDifficulty = "easy" | "medium" | "hard";
+export type QuizLength = "short" | "medium" | "long";
+export type QuizQuestionType = "mcq" | "truefalse" | "mixed";
+export type QuizLanguage = "auto" | "ar" | "fr" | "en";
+export type LearningMode = "summary" | "lesson" | "exercises" | "questions";
+export type LearningTemplate = "quick" | "academic" | "exam" | "pedagogical";
+export type QuizSettings = {
+  count: number;
+  difficulty: QuizDifficulty;
+  questionType: QuizQuestionType;
+  language: QuizLanguage;
+  hints: boolean;
+  optionsCount: number;
+};
+export type StudioQuizSettings = QuizSettings & {
+  length: QuizLength;
+  mode: "practice" | "exam";
+};
+export type StudioOptions = Partial<StudioQuizSettings> & {
+  learningMode?: LearningMode;
+  template?: LearningTemplate;
+  answers?: boolean;
+};
+export type StudioQuizQuestion = {
+  id: number;
+  question: string;
+  options: string[];
+  correct: number;
+  hint: string;
+  explanation: string;
+};
+export type StudioFlashcard = { q: string; a: string; tags?: string[] };
+export type MindMapNode = {
+  label: string;
+  children?: MindMapNode[];
+};
+export type MindMapTemplate =
+  | "tree"
+  | "balanced"
+  | "org"
+  | "radial"
+  | "arc"
+  | "timeline"
+  | "stairs"
+  | "outline"
+  | "fishbone"
+  | "columns"
+  | "lanes"
+  | "matrix";
+export type StudioMindMap = {
+  title: string;
+  template?: MindMapTemplate;
+  root: MindMapNode;
+};
+export type StudioPayload =
+  | { kind: "quiz" | "qcm"; questions: StudioQuizQuestion[]; settings?: StudioQuizSettings }
+  | { kind: "flashcards"; cards: StudioFlashcard[] }
+  | { kind: "summary"; markdown: string }
+  | { kind: "mindmap"; mindmap: StudioMindMap }
+  | { kind: "learning"; mode: LearningMode; template: LearningTemplate; markdown: string };
+export type StudioEvent =
+  | { type: "ready"; jobId: string }
+  | { type: "phase"; value: "reading" | "analyzing" | "generating" | string }
+  | { type: "result"; kind: StudioKind; payload: StudioPayload }
+  | { type: "done" }
+  | { type: "error"; error: string }
+  | { type: "ping"; t: number };
 export type Question = { id: number; question: string; options: string[]; correct: number; hint: string; explanation: string; imageHtml?: string; };
-export type QuizStartResponse = { ok: true; quizId: string; stream: string }
+export type QuizStartResponse = { ok: true; quizId: string; sourceName?: string; stream: string }
 export type QuizEvent = { type: "ready" | "phase" | "quiz" | "done" | "error" | "ping"; quizId?: string; value?: string; quiz?: unknown; error?: string; t?: number }
 export type SmartNotesStart = { ok: true; noteId: string; stream: string }
 export type CompanionHistoryEntry = { role: "user" | "assistant"; content: string }
@@ -124,10 +204,11 @@ export async function chatJSON(body: ChatJSONBody) {
   });
 }
 
-export async function chatMultipart(q: string, files: File[], chatId?: string) {
+export async function chatMultipart(q: string, files: File[], chatId?: string, sourceId?: string) {
   const f = new FormData();
   f.append("q", q);
   if (chatId) f.append("chatId", chatId);
+  if (sourceId) f.append("sourceId", sourceId);
   for (const file of files) f.append("file", file, file.name);
   return req<ChatStartResponse>(`${env.backend}/chat`, {
     method: "POST",
@@ -155,10 +236,13 @@ export async function chatAskOnce(opts: {
   q: string;
   files?: File[];
   chatId?: string;
+  sourceId?: string;
   onEvent?: (ev: ChatEvent) => void;
 }) {
-  const { q, files = [], chatId, onEvent } = opts;
-  const start = files.length ? await chatMultipart(q, files, chatId) : await chatJSON({ q, chatId });
+  const { q, files = [], chatId, sourceId, onEvent } = opts;
+  const start = files.length
+    ? await chatMultipart(q, files, chatId, sourceId)
+    : await chatJSON({ q, chatId, sourceId });
   let answer = "";
   let flashcards: FlashCard[] | undefined;
 
@@ -216,6 +300,51 @@ export function getChats() {
 
 export function getChatDetail(id: string) {
   return req<ChatDetail>(`${env.backend}/chats/${encodeURIComponent(id)}`, { method: "GET" });
+}
+
+export async function uploadSources(files: File[]) {
+  const f = new FormData();
+  for (const file of files) f.append("file", file, file.name);
+  return req<{ ok: true; sources: SourceItem[]; errors?: string[] }>(`${env.backend}/sources`, {
+    method: "POST",
+    body: f,
+    timeout: Math.max(env.timeout, 300000),
+  });
+}
+
+export function listSources() {
+  return req<{ ok: true; sources: SourceItem[] }>(`${env.backend}/sources`, { method: "GET" });
+}
+
+export function getSource(id: string) {
+  return req<{ ok: true; source: SourceItem }>(`${env.backend}/sources/${encodeURIComponent(id)}`, { method: "GET" });
+}
+
+export function deleteSource(id: string) {
+  return req<{ ok: true }>(`${env.backend}/sources/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function studioStart(sourceId: string, kind: StudioKind, options: StudioOptions = {}) {
+  return req<{ ok: true; jobId: string; kind: StudioKind; sourceName: string; stream: string }>(
+    `${env.backend}/studio/generate`,
+    {
+      method: "POST",
+      headers: jsonHeaders({}),
+      body: JSON.stringify({ sourceId, kind, options }),
+    },
+  );
+}
+
+export function connectStudioStream(jobId: string, onEvent: (ev: StudioEvent) => void) {
+  const url = wsURL(`/ws/studio?jobId=${encodeURIComponent(jobId)}`);
+  const ws = new WebSocket(url);
+  ws.onmessage = (m) => {
+    try {
+      onEvent(JSON.parse(m.data as string) as StudioEvent);
+    } catch { }
+  };
+  ws.onerror = () => onEvent({ type: "error", error: "stream_error" });
+  return { ws, close: () => { try { ws.close(); } catch { } } };
 }
 
 export async function createFlashcard(input: {
@@ -300,11 +429,12 @@ export function flashcards(topic: string) {
   });
 }
 
-export async function quizStart(topic: string) {
+export async function quizStart(topic: string, options: Partial<QuizSettings> & { sourceId?: string } = {}) {
+  const { sourceId, ...settings } = options;
   return req<QuizStartResponse>(`${env.backend}/quiz`, {
     method: "POST",
     headers: jsonHeaders({}),
-    body: JSON.stringify({ topic })
+    body: JSON.stringify({ topic, sourceId: sourceId || undefined, options: settings })
   }
   )
 }

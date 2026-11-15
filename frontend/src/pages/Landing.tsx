@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PromptRail from "../components/Landing/PromptRail";
 import PromptBox from "../components/Landing/PromptBox";
 import ExploreTopics from "../components/Landing/ExploreTopics";
-import { chatMultipart, chatJSON } from "../lib/api";
+import { chatJSON, uploadSources } from "../lib/api";
 
 export default function Landing() {
   const [prompt, setPrompt] = useState("");
@@ -37,7 +37,7 @@ export default function Landing() {
     const q = (override ?? prompt).trim();
     if (!q && !stagedFile) return;
 
-    if (mode === "Quiz") {
+    if (mode === "Quiz" && !stagedFile) {
       navigate(`/quiz?topic=${encodeURIComponent(q)}`, { state: { topic: q } });
       return;
     }
@@ -45,8 +45,16 @@ export default function Landing() {
     setBusy(true);
     try {
       if (stagedFile) {
-        const { chatId } = await chatMultipart(q || " ", [stagedFile]);
-        navigate(`/chat?chatId=${encodeURIComponent(chatId)}&q=${encodeURIComponent(q)}`);
+        const res = await uploadSources([stagedFile]);
+        const source = res.sources?.[0];
+        if (!source) throw new Error("upload failed");
+        if (mode === "Quiz") {
+          navigate(`/studio?sourceId=${encodeURIComponent(source.id)}`);
+        } else {
+          const params = new URLSearchParams({ sourceId: source.id });
+          if (q) params.set("q", q);
+          navigate(`/chat?${params.toString()}`);
+        }
         return;
       }
       const r = await chatJSON({ q });
@@ -59,7 +67,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full px-4 lg:pl-28 lg:pr-4">
+    <div className="flex flex-col min-h-screen w-full pl-4 pr-4 md:pl-32">
       <div className="flex-1 flex flex-col justify-center max-w-4xl mx-auto my-20 md:my-4 w-full px-2">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl text-white font-semibold pl-3 border-l-2 border-sky-500 mb-8">
           What&apos;d you like to learn today?

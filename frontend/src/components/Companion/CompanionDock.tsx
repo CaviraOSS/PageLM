@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useLocation } from "react-router-dom"
 import { companionAsk, type FlashCard } from "../../lib/api"
 import MarkdownView from "../Chat/MarkdownView"
 import { useCompanion } from "./CompanionProvider"
@@ -32,6 +33,7 @@ function toHistoryPayload(messages: CompanionMessage[]) {
 
 export default function CompanionDock() {
   const { document, open, setOpen } = useCompanion()
+  const { pathname } = useLocation()
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<CompanionMessage[]>([])
   const [busy, setBusy] = useState(false)
@@ -107,6 +109,9 @@ export default function CompanionDock() {
   }
 
   const disabled = !hasDocument || busy
+  const isStudio = pathname === "/studio" || pathname.startsWith("/studio/")
+
+  if (isStudio) return null
 
   return (
     <>

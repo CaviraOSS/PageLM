@@ -5,6 +5,13 @@ body {
   font-family: 'Schibsted Grotesk', sans-serif;
 }
 
+/* When the side rail is hidden, let the page use the full width. */
+@media (min-width: 768px) {
+  html.nav-collapsed .app-content > * {
+    padding-left: 1rem !important;
+  }
+}
+
 .custom-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(82, 82, 91, 0.9) rgba(24, 24, 27, 0.7);
@@ -101,5 +108,235 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Studio generation theater */
+@keyframes studioFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(-1.5deg); }
+}
+
+@keyframes studioOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes studioScan {
+  0% { top: 4%; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 94%; opacity: 0; }
+}
+
+@keyframes studioGlow {
+  0%, 100% { opacity: 0.45; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+
+@keyframes studioParticle {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 0; }
+  18% { opacity: 0.9; }
+  100% { transform: translate3d(var(--dx, 0px), var(--dy, -120px), 0) scale(0.2); opacity: 0; }
+}
+
+@keyframes studioShine {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(220%); }
+}
+
+@keyframes studioGrid {
+  from { background-position: 0 0; }
+  to { background-position: 48px 48px; }
+}
+
+@keyframes studioStepPop {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes studioResultIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.studio-float { animation: studioFloat 4.5s ease-in-out infinite; }
+.studio-orbit-slow { animation: studioOrbit 18s linear infinite; }
+.studio-orbit-rev { animation: studioOrbit 26s linear infinite reverse; }
+.studio-scanline { animation: studioScan 2.8s ease-in-out infinite; }
+.studio-glow { animation: studioGlow 3.2s ease-in-out infinite; }
+.studio-particle { animation: studioParticle var(--dur, 4.5s) ease-out infinite; animation-delay: var(--delay, 0s); }
+.studio-grid {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: studioGrid 6s linear infinite;
+}
+.studio-step-active { animation: studioStepPop 500ms ease-out; }
+.studio-result { animation: studioResultIn 420ms ease-out both; }
+
+.studio-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.studio-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+  transform: translateX(-120%);
+  animation: studioShine 2.4s ease-in-out infinite;
+}
+
+.studio-flip {
+  transform-style: preserve-3d;
+  transition: transform 620ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.studio-flip.is-flipped { transform: rotateY(180deg); }
+.studio-flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.studio-flip-back { transform: rotateY(180deg); }
+
+/* Studio mind map */
+@keyframes studioMmNodeIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes studioMmEdgeIn {
+  from { stroke-dashoffset: 1; opacity: 0; }
+  18% { opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.studio-mm-canvas {
+  background-color: #0a0a09;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.065) 1px, transparent 0),
+    radial-gradient(ellipse 72% 72% at 84% 42%, rgba(139, 92, 246, 0.12), transparent 70%),
+    radial-gradient(ellipse 64% 64% at 16% 58%, rgba(56, 189, 248, 0.09), transparent 70%);
+  background-size: 22px 22px, 100% 100%, 100% 100%;
+}
+
+.studio-mm-node {
+  animation: studioMmNodeIn 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.studio-mm-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: studioMmEdgeIn 700ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.18));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-float,
+  .studio-orbit-slow,
+  .studio-orbit-rev,
+  .studio-scanline,
+  .studio-glow,
+  .studio-particle,
+  .studio-grid,
+  .studio-step-active,
+  .studio-result,
+  .studio-mm-node,
+  .studio-mm-edge,
+  .studio-shine::after {
+    animation: none !important;
+  }
+  .studio-mm-edge { stroke-dashoffset: 0; }
+  .studio-flip { transition: none; }
+}
+
+/* Print / PDF export for learning files */
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #learning-print-area,
+  #learning-print-area * {
+    visibility: visible;
+  }
+
+  #learning-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  #learning-print-area,
+  #learning-print-area h1,
+  #learning-print-area h2,
+  #learning-print-area h3,
+  #learning-print-area h4,
+  #learning-print-area p,
+  #learning-print-area li,
+  #learning-print-area td,
+  #learning-print-area th,
+  #learning-print-area strong,
+  #learning-print-area em,
+  #learning-print-area span {
+    color: #111827 !important;
+  }
+
+  #learning-print-area a {
+    color: #1d4ed8 !important;
+  }
+
+  #learning-print-area hr {
+    border-color: #d1d5db !important;
+  }
+
+  #learning-print-area blockquote {
+    border-color: #9ca3af !important;
+  }
+
+  #learning-print-area pre,
+  #learning-print-area code {
+    background: #f3f4f6 !important;
+    border-color: #d1d5db !important;
+    color: #111827 !important;
+  }
+
+  #learning-print-area table,
+  #learning-print-area th,
+  #learning-print-area td {
+    border-color: #d1d5db !important;
+  }
+
+  #learning-print-area h1,
+  #learning-print-area h2,
+  #learning-print-area h3 {
+    break-after: avoid;
+  }
+
+  #learning-print-area pre,
+  #learning-print-area blockquote,
+  #learning-print-area table {
+    break-inside: avoid;
   }
 }
